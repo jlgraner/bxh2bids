@@ -1,0 +1,50 @@
+{
+    "ManufacturersModelName": {
+                                "location": ["bxh", "acquisitiondata", "scannermodelname"],
+                                "BIDSstyle": "string"
+                            },
+    "MagneticFieldStrength": {
+                                "location": ["bxh", "acquisitiondata", "magneticfield"],
+                                "BIDSstyle": "float"
+                            },
+    "Manufacturer": {
+                        "location": ["bxh", "acquisitiondata", "scannermanufacturer"],
+                        "BIDSstyle": "string"
+                    },
+    "DeviceSerialNumber": {
+                            "location": ["bxh", "acquisitiondata", "scannerserialnumber"],
+                            "BIDSstyle": "string"
+                        },
+    "SoftwareVersions": {
+                        "location": ["bxh", "acquisitiondata", "softwareversions"],
+                        "BIDSstyle": "string"
+                        },
+    "ReceiveCoilName": {
+                        "location": ["bxh", "acquisitiondata", "receivecoilname"],
+                        "BIDSstyle": "string"
+                    },
+    "PulseSequenceType": {
+                            "location": ["bxh", "acquisitiondata", "description"],
+                            "BIDSstyle": "string"
+                        },
+    "EffectiveEchoSpacing": {
+                            "location": ["bxh", "acquisitiondata", "echospacing"],
+                            "BIDSstyle": "float"
+                        },
+    "EchoTime": {
+                    "location": ["bxh", "acquisitiondata", "te"],
+                    "BIDSstyle": "float"
+                },
+    "InversionTime": {
+                        "location": ["bxh", "acquisitiondata", "ti"],
+                        "BIDSstyle": "float"
+                    },
+    "FlipAngle": {
+                    "location": ["bxh", "acquisitiondata", "flipangle"],
+                    "BIDSstyle": "int"
+                },
+    "InstitutionName": {
+                        "location": ["bxh", "acquisitiondata", "institution"],
+                        "BIDSstyle": "string"
+                    }
+}

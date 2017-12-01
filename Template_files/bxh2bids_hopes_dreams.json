@@ -1,0 +1,14 @@
+{
+  "source_study_dir": "[[PATH CONTAINING YOUR 'Data' DIRECTORY]]",
+
+  "target_study_dir": "[[WHERE YOU WANT THE BIDS DATA TO BE WRITTEN. THE LAST ELEMENT OF THE PATH WILL BE THE STUDY NAME.]]",
+
+  "log_dir": "[[DIRECTORY WHERE YOU WANT THIS SCRIPT TO WRITE LOG FILES]]",
+
+  "ses_info_dir": "[[DIRECTORY WHERE YOU WILL STORE YOUR SESSION INFO FILES]]",
+
+  "ses_files": {
+                "[[SESSION ID 1]]": "[[SESSION INFO FILE 1]].json",
+                "[[SESSION ID 2]]": "[[SESSION INFO FILE 2]].json"
+                }
+}

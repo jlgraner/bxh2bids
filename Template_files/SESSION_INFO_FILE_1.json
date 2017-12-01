@@ -1,0 +1,26 @@
+{
+"sub": "[[SUBJECT ID 1]]",
+"ses": "[[BIDS SES]]",
+"funcs": {
+          "###_##": {
+                    "task": "[[YOUR TASK NAME]]",
+                    "run": "##",
+                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
+                    },
+          "###_##": {
+                    "task": "[[YOUR TASK NAME]]",
+                    "run": "##",
+                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
+                    },
+          "###_##": {
+                    "task": "[[YOUR TASK NAME]]",
+                    "run": "##",
+                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
+                    },
+          "###_##": {
+                    "task": "[[YOUR TASK NAME]]",
+                    "run": "##",
+                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
+                    }
+          }
+}
