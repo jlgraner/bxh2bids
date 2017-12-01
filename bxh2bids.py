@@ -596,9 +596,9 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     if not os.path.exists(log_dir):
         raise RuntimeError('Log file directory cannot be found: ' + str(log_dir))
 
-    #Make sure the study directory looks like expected.
+    #Make sure there is a Data directory.
     contents = os.listdir(source_study_dir)
-    if 'Analysis' and 'Data' not in contents:
+    if 'Data' not in contents:
         raise RuntimeError('The study directory does not appear as expected: ' + str(source_study_dir))
 
     #Create log file
