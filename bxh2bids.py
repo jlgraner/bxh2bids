@@ -277,7 +277,7 @@ def create_bold_json(bxh_file, full_output):
     #Put together dictionary of things to write to the sidecar .json file
     #Make sure the func field template file is where it should be
     here = os.path.dirname(os.path.realpath(__file__))
-    func_field_file = os.path.join(here, 'func_info_fields.json')
+    func_field_file = os.path.join(here, 'info_field_files', 'func_info_fields.json')
     if not os.path.exists(func_field_file):
         logging.error('Functional image sidecar template file cannot be found!')
         logging.error('It should be here: '+str(func_field_file))
@@ -331,7 +331,7 @@ def create_anat_json(bxh_file, full_output):
     #Put together dictionary of things to write to the sidecar .json file
     #Make sure the anat field template file is where it should be
     here = os.path.dirname(os.path.realpath(__file__))
-    anat_field_file = os.path.join(here, 'anat_info_fields.json')
+    anat_field_file = os.path.join(here, 'info_field_files', 'anat_info_fields.json')
     if not os.path.exists(anat_field_file):
         logging.error('Anatomical image sidecar template file cannot be found!')
         logging.error('It should be here: '+str(anat_field_file))
@@ -372,7 +372,7 @@ def create_dwi_json(bxh_file, full_output):
     #Put together dictionary of things to write to the sidecar .json file
     #Make sure the func field template file is where it should be
     here = os.path.dirname(os.path.realpath(__file__))
-    func_field_file = os.path.join(here, 'dwi_info_fields.json')
+    func_field_file = os.path.join(here, 'info_field_files', 'dwi_info_fields.json')
     if not os.path.exists(func_field_file):
         logging.error('DWI image sidecar template file cannot be found!')
         logging.error('It should be here: '+str(func_field_file))
