@@ -496,7 +496,7 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
     
     #Compare the description to those in the template file to determine type of scan
     here = os.path.dirname(os.path.realpath(__file__))  #returns the dir in which THIS file is
-    template_file = os.path.join(here, 'psd_types.json')
+    template_file = os.path.join(here, 'info_field_files', 'psd_types.json')
     with open(template_file) as fd:
         template = json.loads(fd.read())
     #Make sure the scan description is in the template
