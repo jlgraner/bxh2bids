@@ -62,6 +62,10 @@
                     "type": "func",
                     "label": "bold"
                         },
+    "ncanda-grefieldmap-v1": {
+                    "type": "fmap",
+                    "label": "b0"
+                        },
     "SC:Ax FSPGR BRAVO": {
                     "type": "anat",
                     "label": "T1w"

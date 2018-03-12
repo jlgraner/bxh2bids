@@ -252,6 +252,42 @@ def copy_dwi(image_to_copy, scan_label, ses_dict, output_dir):
     logging.info('---FINISHED: dwi_func---')
 
 
+def copy_ncanda_fmap(image_to_copy, b_label, ses_dict, output_dir):
+
+    logging.info('---START: copy_ncanda_fmap---')
+
+    bidsid = ses_dict['sub']
+    sesid = ses_dict['ses']
+
+    #If output directory does not exist, create it and
+    #all upper-level directories.
+    if not os.path.exists(output_dir):
+        logging.info('Creating_directory: '+str(output_dir))
+        os.makedirs(output_dir)
+
+    ##TODO: clean this up! These strings should not be hard-coded here
+    #Get the input file type
+    if image_to_copy[-3:] == '.gz':
+        file_type = '.nii.gz'
+    else:
+        file_type = '.nii'
+
+    #Copy the fmap file
+    output_name = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+b_label+file_type
+    full_output = os.path.join(output_dir, output_name)
+    #Check to see if the output file already exists
+    if os.path.exists(full_output):
+        raise RuntimeError('Output file already exists: '+str(full_output))
+
+    #Copy the image data
+    logging.info('Copying file: '+str(image_to_copy))
+    logging.info('Target location: '+str(full_output))
+    shutil.copy2(image_to_copy, full_output)
+
+    logging.info('---FINISHED: copy_ncanda_fmap---')
+
+
+
 def create_bold_json(bxh_file, full_output):
 
     logging.info('---START: create_bold_json---')
@@ -403,6 +439,62 @@ def create_dwi_json(bxh_file, full_output):
     logging.info('---FINISHED: create_dwi_json---')
 
 
+def create_ncanda_json(bxh_file, full_output):
+
+    logging.info('---START: create_ncanda_fmap_json---')
+
+    with open(bxh_file) as fd:
+        bxh_contents = xmltodict.parse(fd.read())
+
+    #Put together dictionary of things to write to the sidecar .json file
+    #Make sure the fmap field template file is where it should be
+    here = os.path.dirname(os.path.realpath(__file__))
+    fmap_field_file = os.path.join(here, 'info_field_files', 'fmap_info_fields.json')
+    if not os.path.exists(fmap_field_file):
+        logging.error('Fmap image sidecar template file cannot be found!')
+        logging.error('It should be here: '+str(fmap_field_file))
+        raise RuntimeError('Missing fmap sidecar template file!')
+
+    out_dict = bxh_pick_fields.bxh_pick(fmap_field_file, bxh_as_dict=bxh_contents)
+
+    #Pull apart the two echo times and make sure they are in seconds
+    et = out_dict['EchoTime']
+    if not (len(et.split(' ')) > 1):
+        logging.error('Only one TE found in .bxh header for ncanda fmap!')
+        logging.error('There should be exactly two!')
+        logging.error('Header entry as read by .bxh_pick: '+str(et))
+        logging.error('.bxh file: '+str(bxh_file))
+        raise RuntimeError('One TE found in ncanda .bxh header!')
+
+    et_one = float(et.split(' ')[0])
+    et_two = float(et.split(' ')[1])
+
+    if et_one > 1:
+        logging.info('Echo Time is greater than 1, assuming it is in ms.')
+        et_one = et_one/1000
+        out_dict['EchoTime1'] = et_one
+
+    if et_two > 1:
+        logging.info('Echo Time is greater than 1, assuming it is in ms.')
+        et_two = et_two/1000
+        out_dict['EchoTime2'] = et_two
+
+    #Remove the old EchoTime dictionary entry, quietly
+    out_dict['EchoTime'] = None
+    out_dict.pop('EchoTime')
+
+    out_string = json.dumps(out_dict, indent=4)
+
+    logging.info('Writing sidecar fmap file: '+str(full_output))
+    with open(full_output, 'w') as out_file:
+        out_file.write(out_string)
+
+    ############
+    #############
+    ##########
+    logging.info('---FINISHED: create_ncanda_fmap_json---')
+
+
 def create_bvecs_bvals(bxh_file, ses_dict, output_dir):
     # open DWI bxh file, read b-vector and b-value information 
     # and write into BIDS formatted .bvec and .bval files
@@ -537,6 +629,51 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_prefix+'_'+str(scan_label)+'.json')
         create_bold_json(bxh_file, full_output)
 
+    elif scan_type == 'fmap':
+
+        #Put together the output directory
+        output_dir = os.path.join(target_study_dir, 'sub-'+str(bidsid), 'ses-'+str(sesid), 'fmap')
+
+        #Make sure the data are in a known format
+        if bxh_desc == 'ncanda-grefieldmap-v1':
+            #There should be three .nii.gz files associated with this acquisition.
+            #They should have names in this format, and contain the following:
+            #   bia?_?????_0NN_1-1.ni.gz - Magnitude image at two TEs
+            #   bia?_?????_0NN_2-2.nii.gz - Real image at two TEs
+            #   bia?_?????_0NN_3-3.nii.gz - Imaginary image at two TEs
+
+            #Get the number of this particular image file
+            image_name = bxh_dict['bxh']['datarec']['filename']
+            fmap_part = image_name.split('.nii')[0][-1]
+            if fmap_part == '1':
+                b_label = 'magnitude'
+            elif fmap_part == '2':
+                b_label = 'real'
+            elif fmap_part == '3':
+                b_label = 'imaginary'
+            else:
+                logging.error('Could not identify fieldmap number label in file name.')
+                logging.error('File name: '+str(image_name))
+                logging.error('Number extracted: '+str(fmap_part))
+                raise RuntimeError
+
+            #Copy and rename the fmap file
+            logging.info('Running copy_ncanda_fmap on this .bxh.')
+            copy_ncanda_fmap(image_to_copy, b_label, ses_dict, output_dir)
+
+            #Put together the sidecar .json file
+            output_prefix = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+str(b_label)+'.json'
+            full_output = os.path.join(output_dir, output_prefix)
+            create_ncanda_json(bxh_file, full_output)
+
+            #################
+            #################
+            #################
+        else:
+            logging.error('B0 fieldmap description not recognized: '+str(bxh_desc))
+            logging.error('These vary too much to make assumptions about how to deal with them.')
+            raise RuntimeError
+
     elif scan_type == 'anat':
 
         #Put together the output directory
@@ -592,9 +729,12 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     if not os.path.exists(source_study_dir):
         raise RuntimeError('Study directory cannot be found: ' + str(source_study_dir))
     
-    #Make sure the passed log directory exists
+    #Make sure the passed log directory exists.
+    #If not, create it.
     if not os.path.exists(log_dir):
-        raise RuntimeError('Log file directory cannot be found: ' + str(log_dir))
+        print('Log file directory cannot be found!')
+        print('Creating it: '+str(log_dir))
+        os.makedirs(log_dir)
 
     #Make sure there is a Data directory.
     contents = os.listdir(source_study_dir)
