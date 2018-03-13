@@ -489,9 +489,6 @@ def create_ncanda_json(bxh_file, full_output):
     with open(full_output, 'w') as out_file:
         out_file.write(out_string)
 
-    ############
-    #############
-    ##########
     logging.info('---FINISHED: create_ncanda_fmap_json---')
 
 
@@ -666,9 +663,6 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
             full_output = os.path.join(output_dir, output_prefix)
             create_ncanda_json(bxh_file, full_output)
 
-            #################
-            #################
-            #################
         else:
             logging.error('B0 fieldmap description not recognized: '+str(bxh_desc))
             logging.error('These vary too much to make assumptions about how to deal with them.')
