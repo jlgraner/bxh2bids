@@ -122,6 +122,49 @@ def match_func(image_to_copy, ses_dict):
 
     return func_id_string
 
+
+def match_anat(image_to_copy, ses_dict):
+
+    logging.info('--START: match_anat--')
+
+    #Isolate the file name
+    file_name = os.path.split(image_to_copy)[-1]
+
+    #Start the output name
+    output_prefix = 'sub-'+str(ses_dict['sub'])+'_ses-'+str(ses_dict['ses'])
+
+    #Extract information from the session dictionary
+    anat_scan_strings = ses_dict['anats'].keys()
+    #Try to match the file name with one of the func strings (e.g. '005')
+    file_identified = 0
+    for element in anat_scan_strings:
+        if element in file_name:
+            file_identified = file_identified + 1 #this should never be > 1
+            if file_identified > 1:
+                logging.error('Anat file matched with more than one id string!')
+                logging.error('Check your hopes and dreams file!')
+                logging.error('File name: '+str(image_to_copy))
+                logging.error('BIDS ID: '+str(bidsid))
+                logging.error('Sess ID: '+str(sesid))
+                raise RuntimeError('Anatomical file matched with > 1 id string!')
+            taskid = ses_dict['anats'][element]['task']
+            runid = ses_dict['anats'][element]['run']
+            anat_id_string = element
+    if not file_identified:
+        logging.warning('Anat file not matchted with id string!')
+        logging.warning('This may be okay...')
+        anat_id_string = None
+
+    # #Pull information from the func id structure
+    # for label in ses_dict['funcs'][func_id_string]:
+    #     if label in ['task', 'acq', 'rec', 'run', 'echo']: #These are BIDS-allowable labels
+    #         output_prefix = output_prefix+'_'+str(label)+'-'+str(ses_dict['funcs'][func_id_string][label])
+
+    logging.info('--FINISHED: match_anat--')
+
+    return anat_id_string
+
+
 def copy_func(image_to_copy, scan_label, ses_dict, output_dir):
     
     logging.info('---START: copy_func---')
@@ -715,6 +758,158 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
         
     logging.info('----FINISH: convert_bxh----')
 
+
+################
+def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
+
+    #Directory and name of the bxh file
+    bxh_dir, bxh_name = os.path.split(bxh_file)
+    
+    #Create dictionary entry for this bxh file
+    this_entry_dict = {}
+
+    #Load the contents of the bxh file into a dictionary
+    with open(bxh_file) as fd:
+        bxh_dict = xmltodict.parse(fd.read())
+    
+    #Get the image file associated with the bxh
+    image_to_copy = os.path.join(bxh_dir, bxh_dict['bxh']['datarec']['filename'])
+    #See if the actual image file is a .gz
+    if not os.path.exists(image_to_copy):
+        logging.info('Filename as stored in the bxh file cannot be found.')
+        logging.info('Looking for .nii.gz...')
+        if os.path.exists(str(image_to_copy)+'.gz'):
+            logging.info('Found .gz version of image.')
+            image_to_copy = str(image_to_copy)+'.gz'
+
+    this_entry_dict['orig_image'] = image_to_copy
+    
+    #Get the description of the scan
+    bxh_desc = bxh_dict['bxh']['acquisitiondata']['description']
+    
+    #Compare the description to those in the template file to determine type of scan
+    here = os.path.dirname(os.path.realpath(__file__))  #returns the dir in which THIS file is
+    template_file = os.path.join(here, 'info_field_files', 'psd_types.json')
+    with open(template_file) as fd:
+        template = json.loads(fd.read())
+    #Make sure the scan description is in the template
+    if bxh_desc not in template.keys():
+        logging.error('Scan description not found in template file!')
+        logging.error('Description: '+str(bxh_desc))
+        logging.error('Template File: '+str(template_file))
+        raise RuntimeError('Scan description not found in template file!')
+    
+    #Store the BIDS scan type (func, anat, dwi, fmap),
+    #BIDS scan label (T1w, bold, etc.),
+    #BIDS subject ID, and BIDS session label into the dictionary to return.
+    this_entry_dict['scan_type'] = template[bxh_desc]['type']
+    this_entry_dict['scan_label'] = scan_label = template[bxh_desc]['label']
+    this_entry_dict['sub'] = ses_dict['sub']
+    this_entry_dict['ses'] = ses_dict['ses']
+
+    #If it is a functional image, match the acquisition number with
+    #an entry in the session info. file/dictionary.
+    if this_entry_dict['scan_type'] == 'func':
+        id_string = match_func(image_to_copy, ses_dict)
+    #If it is an anatomical image, try to match the acquisition number
+    #with an entry in the session info. file/dictionary. NOTE: this is
+    #not required for anatomical scans.
+    elif this_entry_dict['scan_type'] == 'anat':
+        id_string = match_anat(image_to_copy, ses_dict)
+    else:
+        id_string = None
+
+    #Pull information from the func id structure to create the output file name
+    #and store individual items in the info dictionary associated with the bxh file.
+    if id_string is not None:
+        for bids_label in ['task', 'acq', 'rec', 'run', 'echo']:
+            if bids_label in ses_dict['funcs'][id_string].keys():
+                this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
+
+    #Construct the output image file name
+    this_entry_dict['output_name'] = create_output_name(this_entry_dict)
+
+    #Add this bxh file's dictionary to the growing list.
+    multi_bxh_info_dict[bxh_name] = this_entry_dict
+
+    return multi_bxh_info_dict
+#####################
+
+def create_output_name(bxh_info_dict):
+
+    #This function takes as input a dictionary from the
+    #multi_bxh_info_dict collection.
+
+    output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses'])
+
+    output_suffix = ''
+    for bids_label in ['task', 'acq', 'rec', 'run', 'echo']:
+        if bids_label in bxh_info_dict.keys():
+            output_suffix = output_suffix+'_'+str(bids_label)+'-'+str(bxh_info_dict[bids_label])
+
+    if bxh_info_dict['orig_image'][-3:] == '.gz':
+        output_ext = '.nii.gz'
+    else:
+        output_ext = '.nii'
+
+    #Construct the output image file name
+    output_name = output_prefix+output_suffix+output_ext
+
+    return output_name
+
+
+
+def compare_output_names(multi_bxh_info_dict):
+
+    #Compare output file names
+    logging.info('Making sure each output name is unique...')
+    for bxh in multi_bxh_info_dict:
+        #Entries for other files
+        other_list = []
+        for entry in multi_bxh_info_dict:
+            if entry != bxh:
+                other_list.append(entry)
+        #Look for a repeated output name
+        matching_list = [bxh]
+        for other_bxh in other_list:
+            if multi_bxh_info_dict[other_bxh]['output_name'] == multi_bxh_info_dict[bxh]['output_name']:
+                matching_list.append(other_bxh)
+                logging.warning('Found identical output file names!')
+                logging.warning('First .bxh: '+str(bxh))
+                logging.warning('Second .bxh: '+str(other_bxh))
+                logging.warning('Attempting to fix this by adding run labels...')
+            #Make sure run labels aren't already there
+            for matching_bxh in matching_list:
+                if 'run' in multi_bxh_info_dict[matching_bxh].keys():
+                    logging.error('bxh files with conflicting output names have run labels in the bxh2bids session info file!')
+                    logging.error('Check session info file to make sure there are not two acquisition numbers with identical entries!')
+                    logging.error('Subject: '+str(bidsid))
+                    logging.error('Session: '+str(sesid))
+                    raise RuntimeError('Duplicate info in session file? Sub: '+str(bidsid)+'; Ses: '+str(sesid))
+            #Extract acquisition numbers from bxh file names
+            num_list = []
+            for matching_bxh in matching_list:
+                bxh_number = os.path.splitext(bxh)[0][-3:]
+                num_list.append(int(bxh_number))
+            #Order the matching list by acquisition number
+            ordered_bxh_list = [x for _,x in sorted(zip(num_list,matching_list), key=lambda pair: pair[0])]
+            #Create a list of new run labels
+            new_run_nums = range(len(ordered_bxh_list))+1
+            new_run_labels = []
+            for element in new_run_nums:
+                new_run_labels.append('run%(num)02d' % {'num':element})
+        #Put the new run labels into the bxh dictionaries that had matching names
+        #and save the new output name into the dictionary.
+        for [bxh, run_label] in zip(matching_list, new_run_labels):
+            logging.info('Adding run number label to bxh: '+str(bxh))
+            multi_bxh_info_dir[bxh]['run'] = run_label
+            multi_bxh_info_dir[bxh]['output_name'] = create_output_name(multi_bxh_info_dir[bxh])
+            logging.info('Changing output file name for '+str(bxh)+' to '+str(multi_bxh_info_dir[bxh]['output_name']))
+
+    return multi_bxh_info_dict
+
+
+
 def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
     
     logging.info('-----START: multi_bxhtobids-----')
@@ -797,6 +992,27 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     else:
         logging.info('No functional data directory found for id: '+str(dataid))
     
+
+    ##############
+    #Construct dictionaries with information about all the bxh files
+    multi_bxh_info_dict = {}
+    for file_item in bxh_list:
+        multi_bxh_info_dict = create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict)
+
+    #The output file name stored for each bxh file should be unique.
+    #If two of them are the same it means:
+    #   1) The same anatomical scan was run multiple times and there is no
+    #      information in the bxh2bids session info file about handling this.
+    #   2) Multiple entries in the "funcs" portion of the session info file
+    #      have the same task and run values.
+    #####################
+
+    multi_bxh_info_dict = compare_output_names(multi_bxh_info_dict)
+
+
+    ####TODO:
+    #Process files using new multi_bxh_info_dict
+
     #Process bxh files
     for file_item in bxh_list:
         logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
