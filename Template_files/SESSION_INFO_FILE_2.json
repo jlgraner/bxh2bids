@@ -22,5 +22,10 @@
                     "run": "##",
                     "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
                     }
-          }
+          },
+"anats": {
+          "###":    {
+                    "acq": "[[acquisition name]]",
+                    "run": "##"
+                    }
 }

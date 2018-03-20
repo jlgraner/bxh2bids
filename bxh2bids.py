@@ -44,6 +44,7 @@ import xmltodict
 import os, re, shutil, sys
 import logging, time
 import bxh_pick_fields
+import string
 
 
 def create_dataset_description(target_study_dir, study_name=None):
@@ -113,11 +114,6 @@ def match_func(image_to_copy, ses_dict):
         logging.error('Sess ID: '+str(sesid))
         raise RuntimeError('Functional file cannot be matched with id string!')
 
-    # #Pull information from the func id structure
-    # for label in ses_dict['funcs'][func_id_string]:
-    #     if label in ['task', 'acq', 'rec', 'run', 'echo']: #These are BIDS-allowable labels
-    #         output_prefix = output_prefix+'_'+str(label)+'-'+str(ses_dict['funcs'][func_id_string][label])
-
     logging.info('--FINISHED: match_func--')
 
     return func_id_string
@@ -134,200 +130,33 @@ def match_anat(image_to_copy, ses_dict):
     output_prefix = 'sub-'+str(ses_dict['sub'])+'_ses-'+str(ses_dict['ses'])
 
     #Extract information from the session dictionary
-    anat_scan_strings = ses_dict['anats'].keys()
-    #Try to match the file name with one of the func strings (e.g. '005')
-    file_identified = 0
-    for element in anat_scan_strings:
-        if element in file_name:
-            file_identified = file_identified + 1 #this should never be > 1
-            if file_identified > 1:
-                logging.error('Anat file matched with more than one id string!')
-                logging.error('Check your hopes and dreams file!')
-                logging.error('File name: '+str(image_to_copy))
-                logging.error('BIDS ID: '+str(bidsid))
-                logging.error('Sess ID: '+str(sesid))
-                raise RuntimeError('Anatomical file matched with > 1 id string!')
-            taskid = ses_dict['anats'][element]['task']
-            runid = ses_dict['anats'][element]['run']
-            anat_id_string = element
-    if not file_identified:
-        logging.warning('Anat file not matchted with id string!')
-        logging.warning('This may be okay...')
+    if 'anats' in ses_dict.keys():
+        anat_scan_strings = ses_dict['anats'].keys()
+        #Try to match the file name with one of the func strings (e.g. '005')
+        file_identified = 0
+        for element in anat_scan_strings:
+            if element in file_name:
+                file_identified = file_identified + 1 #this should never be > 1
+                if file_identified > 1:
+                    logging.error('Anat file matched with more than one id string!')
+                    logging.error('Check your hopes and dreams file!')
+                    logging.error('File name: '+str(image_to_copy))
+                    logging.error('BIDS ID: '+str(bidsid))
+                    logging.error('Sess ID: '+str(sesid))
+                    raise RuntimeError('Anatomical file matched with > 1 id string!')
+                else:
+                    logging.info('Anat file matched with id string: '+str(element))
+                anat_id_string = element
+        if not file_identified:
+            logging.warning('Anat file not matchted with id string!')
+            logging.warning('This may be okay...')
+            anat_id_string = None
+    else:
         anat_id_string = None
-
-    # #Pull information from the func id structure
-    # for label in ses_dict['funcs'][func_id_string]:
-    #     if label in ['task', 'acq', 'rec', 'run', 'echo']: #These are BIDS-allowable labels
-    #         output_prefix = output_prefix+'_'+str(label)+'-'+str(ses_dict['funcs'][func_id_string][label])
 
     logging.info('--FINISHED: match_anat--')
 
     return anat_id_string
-
-
-def copy_func(image_to_copy, scan_label, ses_dict, output_dir):
-    
-    logging.info('---START: copy_func---')
-    
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
-    
-    #If the output directory does not exist, create it and
-    #all upper directories.
-    if not os.path.exists(output_dir):
-        logging.info('Creating directory: '+str(output_dir))
-        os.makedirs(output_dir)
-
-    #Create the output file name based on the id structure in hopes and dreams.
-    func_id_string = match_func(image_to_copy, ses_dict)
-
-    #Start the output name
-    output_prefix = 'sub-'+str(bidsid)+'_ses-'+str(sesid)
-
-    #Pull information from the func id structure
-    for label in ses_dict['funcs'][func_id_string]:
-        if label in ['task', 'acq', 'rec', 'run', 'echo']: #These are BIDS-allowable labels
-            output_prefix = output_prefix+'_'+str(label)+'-'+str(ses_dict['funcs'][func_id_string][label])
-
-    ##TODO: clean this up!
-    #Get the input file type
-    if image_to_copy[-3:] == '.gz':
-        file_type = '.nii.gz'
-    else:
-        file_type = '.nii'
-
-    #Copy the func image data
-    output_name = str(output_prefix)+'_'+str(scan_label)+file_type
-    full_output = os.path.join(output_dir, output_name)
-    #Check to see if the output file already exists
-    if os.path.exists(full_output):
-        raise RuntimeError('Output file already exists: '+str(full_output))
-    
-    #Copy the image data
-    logging.info('Copying file: '+str(image_to_copy))
-    logging.info('Target location: '+str(full_output))
-    shutil.copy2(image_to_copy, full_output)
-    
-    #Copy a .tsv file if it exists
-    func_dict = ses_dict['funcs'][func_id_string]
-    if 'tsv_file' in func_dict.keys():
-        if not os.path.exists(func_dict['tsv_file']):
-            raise RuntimeError('tsv_file cannot be found: '+str(func_dict['tsv_file']))
-        tsv_output_name = str(output_prefix)+'_events.tsv'
-        tsv_full_output = os.path.join(output_dir, tsv_output_name)
-        #Check to see if the output exists already
-        if os.path.exists(tsv_full_output):
-            raise RuntimeError('Output file already exists: '+str(tsv_full_output))
-        tsv_to_copy = func_dict['tsv_file']
-        logging.info('Copying file: '+str(tsv_to_copy))
-        logging.info('Target location: '+str(tsv_full_output))
-        shutil.copy2(tsv_to_copy, tsv_full_output)
-
-    logging.info('---FINISHED: copy_func---')
-
-def copy_anat(image_to_copy, scan_label, ses_dict, output_dir, other_label=''):
-    
-    logging.info('---START: copy_anat---')
-    
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
-    
-    #If the output directory does not exist, create it and
-    #all upper directories.
-    if not os.path.exists(output_dir):
-        logging.info('Creating directory: '+str(output_dir))
-        os.makedirs(output_dir)
-    
-    ##TODO: clean this up! These strings should not be hard-coded in the script!##
-    #Get the input file type
-    if image_to_copy[-3:] == '.gz':
-        file_type = '.nii.gz'
-    else:
-        file_type = '.nii'
-
-    #Copy the anatomy image data
-    output_name = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+other_label+'_'+scan_label+file_type
-    full_output = os.path.join(output_dir, output_name)
-    #Check to see if the output file already exists
-    if os.path.exists(full_output):
-        raise RuntimeError('Output file already exists: '+str(full_output))
-    
-    #Copy the image data
-    logging.info('Copying file: '+str(image_to_copy))
-    logging.info('Target location: '+str(full_output))
-    shutil.copy2(image_to_copy, full_output)
-    
-    logging.info('---FINISHED: copy_anat---')
-
-    
-def copy_dwi(image_to_copy, scan_label, ses_dict, output_dir):
-
-    logging.info('---START: copy_dwi---')
-    
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
-    
-    #If the output directory does not exist, create it and
-    #all upper directories.
-    if not os.path.exists(output_dir):
-        logging.info('Creating directory: '+str(output_dir))
-        os.makedirs(output_dir)
-
-    ##TODO: clean this up! These strings should not be hard-coded here
-    #Get the input file type
-    if image_to_copy[-3:] == '.gz':
-        file_type = '.nii.gz'
-    else:
-        file_type = '.nii'
-
-    #Copy the dwi image data
-    output_name = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+scan_label+file_type
-    full_output = os.path.join(output_dir, output_name)
-    #Check to see if the output file already exists
-    if os.path.exists(full_output):
-        raise RuntimeError('Output file already exists: '+str(full_output))
-    
-    #Copy the image data
-    logging.info('Copying file: '+str(image_to_copy))
-    logging.info('Target location: '+str(full_output))
-    shutil.copy2(image_to_copy, full_output)
-    
-    logging.info('---FINISHED: dwi_func---')
-
-
-def copy_ncanda_fmap(image_to_copy, b_label, ses_dict, output_dir):
-
-    logging.info('---START: copy_ncanda_fmap---')
-
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
-
-    #If output directory does not exist, create it and
-    #all upper-level directories.
-    if not os.path.exists(output_dir):
-        logging.info('Creating_directory: '+str(output_dir))
-        os.makedirs(output_dir)
-
-    ##TODO: clean this up! These strings should not be hard-coded here
-    #Get the input file type
-    if image_to_copy[-3:] == '.gz':
-        file_type = '.nii.gz'
-    else:
-        file_type = '.nii'
-
-    #Copy the fmap file
-    output_name = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+b_label+file_type
-    full_output = os.path.join(output_dir, output_name)
-    #Check to see if the output file already exists
-    if os.path.exists(full_output):
-        raise RuntimeError('Output file already exists: '+str(full_output))
-
-    #Copy the image data
-    logging.info('Copying file: '+str(image_to_copy))
-    logging.info('Target location: '+str(full_output))
-    shutil.copy2(image_to_copy, full_output)
-
-    logging.info('---FINISHED: copy_ncanda_fmap---')
 
 
 
@@ -535,25 +364,21 @@ def create_ncanda_json(bxh_file, full_output):
     logging.info('---FINISHED: create_ncanda_fmap_json---')
 
 
-def create_bvecs_bvals(bxh_file, ses_dict, output_dir):
+def create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir):
     # open DWI bxh file, read b-vector and b-value information 
     # and write into BIDS formatted .bvec and .bval files
     #
     # John Powers, LaBar Lab, Duke University, Nov. 2017
     
     logging.info('---START: create_bvecs_bvals---')
-
-    # get subject and session info for file names
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
     
     # read in the bxh_file using xmltodict
     logging.info('')
     with open(bxh_file) as dwi_bxh:
         bxh_contents = xmltodict.parse(dwi_bxh.read())
-    
+
     # generate .bval file name
-    bvals_output_name = 'sub-' + str(bidsid) + '_ses-' + str(sesid) + '_dwi.bval'
+    bvals_output_name = bxh_info_dict['output_prefix']+'_dwi.bval'
     bvals_full_output = os.path.join(output_dir, bvals_output_name)
 
     # create .bval file and write in row of b-values from bxh
@@ -580,9 +405,7 @@ def create_bvecs_bvals(bxh_file, ses_dict, output_dir):
     bvec_y_line = bvec_y_line.strip()
     bvec_z_line = bvec_z_line.strip()
 
-    
-    # generate .bvec file name
-    bvecs_output_name = 'sub-' + str(bidsid) + '_ses-' + str(sesid) + '_dwi.bvec'
+    bvecs_output_name = bxh_info_dict['output_prefix']+'_dwi.bvec'
     bvecs_full_output = os.path.join(output_dir, bvecs_output_name)
     
     # create .bvec file and write x, y, and z components as separate rows
@@ -593,7 +416,8 @@ def create_bvecs_bvals(bxh_file, ses_dict, output_dir):
 
     logging.info('---FINISH: create_bvecs_bvals---')
 
-def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
+# def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
+def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     #Read in the bxh_file using xmltodict
     #Pull out:
     #   image file name (doc['bxh']['datarec']['filename']
@@ -607,72 +431,62 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
         raise RuntimeError('Passed file cannot be found: '+str(bxh_file))
     
     #Directory of the bxh file
-    bxh_dir = os.path.split(bxh_file)[0]
-    
-    #Load the contents of the bxh file into a dictionary
-    with open(bxh_file) as fd:
-        bxh_dict = xmltodict.parse(fd.read())
-    
-    #Get the image file associated with the bxh
-    image_to_copy = os.path.join(bxh_dir, bxh_dict['bxh']['datarec']['filename'])
-    #See if the actual image file is a .gz
-    if not os.path.exists(image_to_copy):
-        logging.info('Filename as stored in the bxh file cannot be found.')
-        logging.info('Looking for .nii.gz...')
-        if os.path.exists(str(image_to_copy)+'.gz'):
-            logging.info('Found .gz version of image.')
-            image_to_copy = str(image_to_copy)+'.gz'
-    
-    #Get the description of the scan
-    bxh_desc = bxh_dict['bxh']['acquisitiondata']['description']
-    
-    #Compare the description to those in the template file to determine type of scan
-    here = os.path.dirname(os.path.realpath(__file__))  #returns the dir in which THIS file is
-    template_file = os.path.join(here, 'info_field_files', 'psd_types.json')
-    with open(template_file) as fd:
-        template = json.loads(fd.read())
-    #Make sure the scan description is in the template
-    if bxh_desc not in template.keys():
-        logging.error('Scan description not found in template file!')
-        logging.error('Description: '+str(bxh_desc))
-        logging.error('Template File: '+str(template_file))
-        raise RuntimeError('Scan description not found in template file!')
-    
-    scan_type = template[bxh_desc]['type']
-    scan_label = template[bxh_desc]['label']
-    logging.info('Scan type: '+str(scan_type))
-    logging.info('Scan label: '+str(scan_label))
-    
-    bidsid = ses_dict['sub']
-    sesid = ses_dict['ses']
+    bxh_dir = os.path.split(bxh_info_dict['orig_image'])[0]
 
-    if scan_type == 'func':
+    if bxh_info_dict['scan_type'] == 'func':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+str(bidsid), 'ses-'+str(sesid), 'func')
+        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'func')
+        if not os.path.exists(output_dir):
+            logging.info('Creating directory: '+str(output_dir))
+            os.makedirs(output_dir)
 
         #Copy and rename the functional data
         logging.info('Running copy_func on this .bxh.')
-        copy_func(image_to_copy, scan_label, ses_dict, output_dir)
 
-        #Create the sidecar .json file based on the .bxh
-        func_id_string = match_func(image_to_copy, ses_dict)
+        #Copy the image data
+        image_to_copy = bxh_info_dict['orig_image']
+        output_name = bxh_info_dict['output_name']
+        full_output = os.path.join(output_dir, output_name)
+        logging.info('Copying file: '+str(image_to_copy))
+        logging.info('Target location: '+str(full_output))
+        shutil.copy2(image_to_copy, full_output)
 
-        #Start the output name
-        output_prefix = 'sub-'+str(bidsid)+'_ses-'+str(sesid)
+        #Copy a .tsv file if it exists
+        if 'tsv_file' in bxh_info_dict.keys():
+            #Put together the output prefix
+            if bxh_info_dict['output_name'][-3:] == '.gz':
+                image_ext = '.nii.gz'
+            else:
+                image_ext = '.nii'
+            if not os.path.exists(bxh_info_dict['tsv_file']):
+                raise RuntimeError('tsv_file cannot be found: '+str(bxh_info_dict['tsv_file']))
+            tsv_output_name = bxh_info_dict['output_prefix']+'_events.tsv'
+            tsv_full_output = os.path.join(output_dir, tsv_output_name)
+            # tsv_output_name = str(output_prefix)+'_events.tsv'
+            # tsv_full_output = os.path.join(output_dir, tsv_output_name)
+            #Check to see if the output exists already
+            if os.path.exists(tsv_full_output):
+                raise RuntimeError('Output file already exists: '+str(tsv_full_output))
+            tsv_to_copy = bxh_info_dict['tsv_file']
+            logging.info('Copying file: '+str(tsv_to_copy))
+            logging.info('Target location: '+str(tsv_full_output))
+            shutil.copy2(tsv_to_copy, tsv_full_output)
 
-        #Pull information from the func id structure
-        for label in ses_dict['funcs'][func_id_string]:
-            if label in ['task', 'acq', 'rec', 'run', 'echo']: #These are BIDS-allowable labels
-                output_prefix = output_prefix+'_'+str(label)+'-'+str(ses_dict['funcs'][func_id_string][label])
-
-        full_output = os.path.join(output_dir, output_prefix+'_'+str(scan_label)+'.json')
+        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_output = os.path.join(output_dir, output_name)
         create_bold_json(bxh_file, full_output)
 
-    elif scan_type == 'fmap':
+    elif bxh_info_dict['scan_type'] == 'fmap':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+str(bidsid), 'ses-'+str(sesid), 'fmap')
+        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'fmap')
+
+        #If the output directory does not exist, create it and
+        #all upper directories.
+        if not os.path.exists(output_dir):
+            logging.info('Creating directory: '+str(output_dir))
+            os.makedirs(output_dir)
 
         #Make sure the data are in a known format
         if bxh_desc == 'ncanda-grefieldmap-v1':
@@ -683,7 +497,8 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
             #   bia?_?????_0NN_3-3.nii.gz - Imaginary image at two TEs
 
             #Get the number of this particular image file
-            image_name = bxh_dict['bxh']['datarec']['filename']
+            # image_name = bxh_dict['bxh']['datarec']['filename']
+            image_name = bxh_info_dict['orig_image']
             fmap_part = image_name.split('.nii')[0][-1]
             if fmap_part == '1':
                 b_label = 'magnitude'
@@ -699,11 +514,26 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
 
             #Copy and rename the fmap file
             logging.info('Running copy_ncanda_fmap on this .bxh.')
-            copy_ncanda_fmap(image_to_copy, b_label, ses_dict, output_dir)
+
+            if bxh_info_dict['orig_image'][-3:] == '.gz':
+                file_type = '.nii.gz'
+            else:
+                file_type = '.nii'
+
+            #Copy the fmap file
+            full_output = bxh_info_dict['output_prefix']+b_label+file_type
+            #Check to see if the output file already exists
+            if os.path.exists(full_output):
+                raise RuntimeError('Output file already exists: '+str(full_output))
+
+            #Copy the image data
+            logging.info('Copying file: '+str(image_to_copy))
+            logging.info('Target location: '+str(full_output))
+            shutil.copy2(image_to_copy, full_output)
 
             #Put together the sidecar .json file
-            output_prefix = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+str(b_label)+'.json'
-            full_output = os.path.join(output_dir, output_prefix)
+            output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+            full_output = os.path.join(output_dir, output_name)
             create_ncanda_json(bxh_file, full_output)
 
         else:
@@ -711,46 +541,76 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
             logging.error('These vary too much to make assumptions about how to deal with them.')
             raise RuntimeError
 
-    elif scan_type == 'anat':
+    elif bxh_info_dict['scan_type'] == 'anat':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+str(bidsid), 'ses-'+str(sesid), 'anat')
-
-        ##TODO: clean this up! This should not be hard-coded into the script!!!##
-        #Check to see if the image has been through SCIC
-        if 'SC:' in bxh_desc:
-            other_label = '_rec-SC'
-        else:
-            other_label = ''
+        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'anat')
+        #If the output directory does not exist, create it and
+        #all upper directories.
+        if not os.path.exists(output_dir):
+            logging.info('Creating directory: '+str(output_dir))
+            os.makedirs(output_dir)
 
         #Copy and rename the anatomical data
         logging.info('Running copy_anat on this .bxh.')
-        copy_anat(image_to_copy, scan_label, ses_dict, output_dir, other_label=other_label)
+
+        #Copy the anatomy image data
+        # output_name = 'sub-'+bxh_info_dict['sub']+'_ses-'+bxh_info_dict['ses']+other_label+'_'+scan_label+file_type
+        # full_output = os.path.join(output_dir, output_name)
+        image_to_copy = bxh_info_dict['orig_image']
+        output_name = bxh_info_dict['output_name']
+        full_output = os.path.join(output_dir, output_name)
+        #Check to see if the output file already exists
+        if os.path.exists(full_output):
+            raise RuntimeError('Output file already exists: '+str(full_output))
+        
+        #Copy the image data
+        logging.info('Copying file: '+str(image_to_copy))
+        logging.info('Target location: '+str(full_output))
+        shutil.copy2(image_to_copy, full_output)
 
         #Create the sidecare .json file based on the .bxh
-        output_file = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+other_label+'_'+scan_label+'.json'
-        full_output = os.path.join(output_dir, output_file)
+        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_output = os.path.join(output_dir, output_name)
         create_anat_json(bxh_file, full_output)
 
-    elif scan_type == 'dwi':
+    elif bxh_info_dict['scan_type'] == 'dwi':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+str(bidsid), 'ses-'+str(sesid), 'dwi')
+        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'dwi')
+
+        #If the output directory does not exist, create it and
+        #all upper directories.
+        if not os.path.exists(output_dir):
+            logging.info('Creating directory: '+str(output_dir))
+            os.makedirs(output_dir)
 
         #Copy and rename the DWI data
         logging.info('Running copy_dwi on this .bxh.')
-        copy_dwi(image_to_copy, scan_label, ses_dict, output_dir)
+
+        #Copy the dwi image data
+        image_to_copy = bxh_info_dict['orig_image']
+        output_name = bxh_info_dict['output_name']
+        full_output = os.path.join(output_dir, output_name)
+        #Check to see if the output file already exists
+        if os.path.exists(full_output):
+            raise RuntimeError('Output file already exists: '+str(full_output))
+        
+        #Copy the image data
+        logging.info('Copying file: '+str(image_to_copy))
+        logging.info('Target location: '+str(full_output))
+        shutil.copy2(image_to_copy, full_output)
 
         #Create the sidecar .json file based on the .bxh
-        output_file = 'sub-'+str(bidsid)+'_ses-'+str(sesid)+'_'+str(scan_label)+'.json'
-        full_output = os.path.join(output_dir, output_file)
+        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_output = os.path.join(output_dir, output_name)
         create_dwi_json(bxh_file, full_output)
 
         #Create the bvecs and bvals files based on the .bxh
         logging.info('Running create_bvecs_bvals on this .bxh.')
-        create_bvecs_bvals(bxh_file, ses_dict, output_dir)
+        create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
         
-    elif scan_type == 'notsupported':
+    elif bxh_info_dict['scan_type'] == 'notsupported':
         logging.info('Scan type not supported for: '+str(bxh_file))
     else:
         logging.error('Scan type not recognized; should be [bold,anat,dwi]: '+str(scan_type))
@@ -759,7 +619,6 @@ def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
     logging.info('----FINISH: convert_bxh----')
 
 
-################
 def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
 
     #Directory and name of the bxh file
@@ -783,7 +642,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
             image_to_copy = str(image_to_copy)+'.gz'
 
     this_entry_dict['orig_image'] = image_to_copy
-    
+
     #Get the description of the scan
     bxh_desc = bxh_dict['bxh']['acquisitiondata']['description']
     
@@ -811,26 +670,49 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     #an entry in the session info. file/dictionary.
     if this_entry_dict['scan_type'] == 'func':
         id_string = match_func(image_to_copy, ses_dict)
+        for bids_label in ['task', 'acq', 'rec', 'run', 'echo']:
+            if bids_label in ses_dict['funcs'][id_string].keys():
+                this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
+        #Pull out information about any .tsv files
+        if 'tsv_file' in ses_dict['funcs'][id_string].keys():
+            this_entry_dict['tsv_file'] = ses_dict['funcs'][id_string]['tsv_file']
+
     #If it is an anatomical image, try to match the acquisition number
     #with an entry in the session info. file/dictionary. NOTE: this is
     #not required for anatomical scans.
     elif this_entry_dict['scan_type'] == 'anat':
         id_string = match_anat(image_to_copy, ses_dict)
+        if id_string is not None:
+            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod']:
+                if bids_label in ses_dict['anats'][id_string].keys():
+                    this_entry_dict[bids_label] = ses_dict['anats'][id_string][bids_label]
+        else:
+            #If there is no rec value set in the session info file
+            #but the image is a SCIC version of the original, set
+            #the rec to reflect that.
+            if 'SC' in bxh_desc:
+                this_entry_dict['rec'] = 'SC'
     else:
         id_string = None
 
-    #Pull information from the func id structure to create the output file name
-    #and store individual items in the info dictionary associated with the bxh file.
-    if id_string is not None:
-        for bids_label in ['task', 'acq', 'rec', 'run', 'echo']:
-            if bids_label in ses_dict['funcs'][id_string].keys():
-                this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
-
     #Construct the output image file name
-    this_entry_dict['output_name'] = create_output_name(this_entry_dict)
+    naming_output = create_output_name(this_entry_dict)
+    this_entry_dict['output_name'] = naming_output[0]
+    this_entry_dict['output_prefix'] = naming_output[1]
+
+    #Set the output prefix
+    if this_entry_dict['output_name'][-3:] == '.gz':
+        image_ext = '.nii.gz'
+    else:
+        image_ext = '.nii'
+    output_file_name = this_entry_dict['output_name'].split(image_ext)[0]
+    #The prefix will be everything before the final file label (i.e. "bold", "events", etc.)
+    this_entry_dict['output_prefix'] = string.join(output_file_name.split('_')[:-1],'_')
 
     #Add this bxh file's dictionary to the growing list.
-    multi_bxh_info_dict[bxh_name] = this_entry_dict
+    #Unless it's not supported.
+    if this_entry_dict['scan_type'] != 'notsupported':
+        multi_bxh_info_dict[bxh_name] = this_entry_dict
 
     return multi_bxh_info_dict
 #####################
@@ -843,9 +725,10 @@ def create_output_name(bxh_info_dict):
     output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses'])
 
     output_suffix = ''
-    for bids_label in ['task', 'acq', 'rec', 'run', 'echo']:
+    for bids_label in ['task', 'acq', 'ce', 'rec', 'run', 'echo', 'mod']:
         if bids_label in bxh_info_dict.keys():
             output_suffix = output_suffix+'_'+str(bids_label)+'-'+str(bxh_info_dict[bids_label])
+    output_suffix = output_suffix+'_'+str(bxh_info_dict['scan_label'])
 
     if bxh_info_dict['orig_image'][-3:] == '.gz':
         output_ext = '.nii.gz'
@@ -855,13 +738,19 @@ def create_output_name(bxh_info_dict):
     #Construct the output image file name
     output_name = output_prefix+output_suffix+output_ext
 
-    return output_name
+    #Construct the output prefix
+    outname = output_name.split(output_ext)[0]
+    return_prefix = string.join(outname.split('_')[:-1],'_')
+
+    return [output_name, return_prefix]
 
 
 
 def compare_output_names(multi_bxh_info_dict):
 
-    #Compare output file names
+    #Compare output file names. If two bxh file entries have the same
+    #output file name, try to fix this by including run numbers
+    #in the name creation.
     logging.info('Making sure each output name is unique...')
     for bxh in multi_bxh_info_dict:
         #Entries for other files
@@ -874,37 +763,44 @@ def compare_output_names(multi_bxh_info_dict):
         for other_bxh in other_list:
             if multi_bxh_info_dict[other_bxh]['output_name'] == multi_bxh_info_dict[bxh]['output_name']:
                 matching_list.append(other_bxh)
-                logging.warning('Found identical output file names!')
-                logging.warning('First .bxh: '+str(bxh))
-                logging.warning('Second .bxh: '+str(other_bxh))
-                logging.warning('Attempting to fix this by adding run labels...')
+                logging.info('Found identical output file names!')
+                logging.info('First .bxh: '+str(bxh))
+                logging.info('Second .bxh: '+str(other_bxh))
+                logging.info('Attempting to fix this by adding run labels...')
+        if len(matching_list) > 1:
             #Make sure run labels aren't already there
             for matching_bxh in matching_list:
                 if 'run' in multi_bxh_info_dict[matching_bxh].keys():
                     logging.error('bxh files with conflicting output names have run labels in the bxh2bids session info file!')
                     logging.error('Check session info file to make sure there are not two acquisition numbers with identical entries!')
-                    logging.error('Subject: '+str(bidsid))
-                    logging.error('Session: '+str(sesid))
+                    logging.error('Subject: '+str(multi_bxh_info_dict[bxh]['sub']))
+                    logging.error('Session: '+str(multi_bxh_info_dict[bxh]['ses']))
                     raise RuntimeError('Duplicate info in session file? Sub: '+str(bidsid)+'; Ses: '+str(sesid))
             #Extract acquisition numbers from bxh file names
+            logging.info('Extracting acquisition numbers from bxh file names...')
             num_list = []
             for matching_bxh in matching_list:
                 bxh_number = os.path.splitext(bxh)[0][-3:]
                 num_list.append(int(bxh_number))
             #Order the matching list by acquisition number
             ordered_bxh_list = [x for _,x in sorted(zip(num_list,matching_list), key=lambda pair: pair[0])]
+            logging.info('Creating list of new run labels...')
             #Create a list of new run labels
-            new_run_nums = range(len(ordered_bxh_list))+1
+            new_run_nums = range(1,len(ordered_bxh_list)+1)
             new_run_labels = []
             for element in new_run_nums:
-                new_run_labels.append('run%(num)02d' % {'num':element})
-        #Put the new run labels into the bxh dictionaries that had matching names
-        #and save the new output name into the dictionary.
-        for [bxh, run_label] in zip(matching_list, new_run_labels):
-            logging.info('Adding run number label to bxh: '+str(bxh))
-            multi_bxh_info_dir[bxh]['run'] = run_label
-            multi_bxh_info_dir[bxh]['output_name'] = create_output_name(multi_bxh_info_dir[bxh])
-            logging.info('Changing output file name for '+str(bxh)+' to '+str(multi_bxh_info_dir[bxh]['output_name']))
+                new_run_labels.append('%(num)02d' % {'num':element})
+            #Put the new run labels into the bxh dictionaries that had matching names
+            #and save the new output name into the dictionary.
+            for [bxh, run_label] in zip(matching_list, new_run_labels):
+                logging.info('Adding run number label to bxh: '+str(bxh))
+                multi_bxh_info_dict[bxh]['run'] = run_label
+                name_output = create_output_name(multi_bxh_info_dict[bxh])
+                multi_bxh_info_dict[bxh]['output_name'] = name_output[0]
+                multi_bxh_info_dict[bxh]['output_prefix'] = name_output[1]
+                logging.info('Changing output file name for '+str(bxh)+' to '+str(multi_bxh_info_dict[bxh]['output_name']))
+        else:
+            logging.info('Did not find any identical output file names!')
 
     return multi_bxh_info_dict
 
@@ -992,12 +888,10 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     else:
         logging.info('No functional data directory found for id: '+str(dataid))
     
-
-    ##############
     #Construct dictionaries with information about all the bxh files
     multi_bxh_info_dict = {}
     for file_item in bxh_list:
-        multi_bxh_info_dict = create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict)
+        multi_bxh_info_dict = create_internal_info(file_item['bxhfile'], ses_dict, multi_bxh_info_dict)
 
     #The output file name stored for each bxh file should be unique.
     #If two of them are the same it means:
@@ -1005,19 +899,18 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     #      information in the bxh2bids session info file about handling this.
     #   2) Multiple entries in the "funcs" portion of the session info file
     #      have the same task and run values.
-    #####################
-
+    
+    #Make sure the output file names are unique. If not, try to fix them.
     multi_bxh_info_dict = compare_output_names(multi_bxh_info_dict)
-
-
-    ####TODO:
-    #Process files using new multi_bxh_info_dict
 
     #Process bxh files
     for file_item in bxh_list:
-        logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
-        
-        convert_bxh(file_item['bxhfile'], ses_dict, target_study_dir=target_study_dir)
+        bxh_file_name = os.path.split(file_item['bxhfile'])[-1]
+        if bxh_file_name in multi_bxh_info_dict.keys():
+            logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
+            bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
+            convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
+            # convert_bxh(file_item['bxhfile'], ses_dict, target_study_dir=target_study_dir)
         
     #Create dataset_description.json if it does not already exist
     logging.info('Running create_dataset_description().')
