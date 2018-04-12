@@ -69,5 +69,9 @@
     "SC:Ax FSPGR BRAVO": {
                     "type": "anat",
                     "label": "T1w"
-                    }
+                    },
+    "SPGR_GRAPPA Iron": {
+                    "type": "anat",
+                    "label": "T1w"
+    }
 }
