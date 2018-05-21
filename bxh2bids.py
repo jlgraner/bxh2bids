@@ -45,6 +45,37 @@ import os, re, shutil, sys
 import logging, time
 import bxh_pick_fields
 import string
+import gzip
+
+
+def copy_image(image_to_copy, full_output):
+
+    logging.info('--STARTING: copy_image--')
+
+    #If the image to be copied is compressed (e.g. a ".gz")
+    #unzip the archive, rename the resulting file, and then
+    #create a new archive. This is done to make sure the
+    #original file name is not maintained.
+
+    #Read in the input file contents
+    logging.info('Reading file to copy: {}'.format(image_to_copy))
+    if image_to_copy[-3:] == '.gz':
+        with gzip.open(image_to_copy, 'rb') as fi:
+            input_contents = fi.read()
+    else:
+        with open(image_to_copy, 'rb') as fi:
+            input_contents = fi.read()
+
+    #Write the contents to the output destination
+    logging.info('Writing file: {}'.format(full_output))
+    if full_output[-3:] == '.gz':
+        with gzip.open(full_output, 'wb') as fo:
+            fo.write(input_contents)
+    else:
+        with open(full_output, 'wb') as fo:
+            fo.write(input_contents)
+
+    logging.info('--FINISHED: copy_image--')
 
 
 def create_dataset_description(target_study_dir, study_name=None):
@@ -157,7 +188,6 @@ def match_anat(image_to_copy, ses_dict):
     logging.info('--FINISHED: match_anat--')
 
     return anat_id_string
-
 
 
 def create_bold_json(bxh_file, full_output):
@@ -450,7 +480,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
-        shutil.copy2(image_to_copy, full_output)
+        # shutil.copy2(image_to_copy, full_output)
+        copy_image(image_to_copy, full_output)
 
         #Copy a .tsv file if it exists
         if 'tsv_file' in bxh_info_dict.keys():
@@ -529,7 +560,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             #Copy the image data
             logging.info('Copying file: '+str(image_to_copy))
             logging.info('Target location: '+str(full_output))
-            shutil.copy2(image_to_copy, full_output)
+            # shutil.copy2(image_to_copy, full_output)
+            copy_image(image_to_copy, full_output)
 
             #Put together the sidecar .json file
             output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
@@ -567,7 +599,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
-        shutil.copy2(image_to_copy, full_output)
+        # shutil.copy2(image_to_copy, full_output)
+        copy_image(image_to_copy, full_output)
 
         #Create the sidecare .json file based on the .bxh
         output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
@@ -599,7 +632,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
-        shutil.copy2(image_to_copy, full_output)
+        # shutil.copy2(image_to_copy, full_output)
+        copy_image(image_to_copy, full_output)
 
         #Create the sidecar .json file based on the .bxh
         output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
