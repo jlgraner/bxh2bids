@@ -240,11 +240,18 @@ def create_bold_json(bxh_file, full_output):
     #Calculate slice timing
     for element in bxh_contents['bxh']['datarec']['dimension']:
         if element['@type'] == 'z':
-            slice_order_list = element['datapoints']['#text']
-            num_slices = float(element['size'])
+            if 'datapoints' in element.keys():
+                logging.info('bxh file contains slice order list')
+                slice_order_list = element['datapoints']['#text'].split(' ')
+                num_slices = float(element['size'])
+            else:
+                logging.warn('Cannot find slice order in bxh file!')
+                logging.warn('Assuming it is sequential up!')
+                num_slices = float(element['size'])
+                slice_order_list = range(1, num_slices+1)
     factor = tr/num_slices
     st = []
-    for s in slice_order_list.split(' '):
+    for s in slice_order_list:
         st.append(factor * (int(s)-1))
 
     out_dict['TaskName'] = taskname
