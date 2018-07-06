@@ -246,7 +246,7 @@ def create_bold_json(bxh_file, full_output):
                 num_slices = float(element['size'])
             else:
                 logging.warn('Cannot find slice order in bxh file!')
-                logging.warn('Assuming it is sequential up!')
+                logging.warn('Assuming it is sequential!')
                 num_slices = float(element['size'])
                 slice_order_list = range(1, num_slices+1)
     factor = tr/num_slices
