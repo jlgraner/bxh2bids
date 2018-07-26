@@ -246,9 +246,10 @@ def create_bold_json(bxh_file, full_output):
                 num_slices = float(element['size'])
             else:
                 logging.warn('Cannot find slice order in bxh file!')
-                logging.warn('Assuming it is sequential!')
+                logging.warn('Assuming it is interleaved up!')
                 num_slices = int(element['size'])
-                slice_order_list = range(1, num_slices+1)
+                interleave_order = range(1, num_slices+1, 2) + range(2, num_slices+1, 2)
+                slice_order_list = [x for _,x in sorted(zip(interleave_order, range(1,num_slices+1)))]
     factor = tr/num_slices
     st = []
     for s in slice_order_list:
