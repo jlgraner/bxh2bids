@@ -73,5 +73,9 @@
     "SPGR_GRAPPA Iron": {
                     "type": "anat",
                     "label": "T1w"
+    			},
+    "fMRI 481x5": {
+	    	    "type": "func",
+	    	    "label": "bold"
     }
 }
