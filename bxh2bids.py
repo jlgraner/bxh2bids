@@ -1,4 +1,3 @@
-
 ###############################################
 #Function:  bxh2bids.py
 #
@@ -248,7 +247,7 @@ def create_bold_json(bxh_file, full_output):
                 logging.warn('Cannot find slice order in bxh file!')
                 logging.warn('Assuming it is interleaved up!')
                 num_slices = int(element['size'])
-                interleave_order = range(1, num_slices+1, 2) + range(2, num_slices+1, 2)
+                interleave_order = list(range(1, num_slices+1, 2)) + list(range(2, num_slices+1, 2))
                 slice_order_list = [x for _,x in sorted(zip(interleave_order, range(1,num_slices+1)))]
     factor = tr/num_slices
     st = []
