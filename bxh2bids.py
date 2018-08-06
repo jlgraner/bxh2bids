@@ -1,4 +1,3 @@
-
 ###############################################
 #Function:  bxh2bids.py
 #
@@ -248,7 +247,7 @@ def create_bold_json(bxh_file, full_output):
                 logging.warn('Cannot find slice order in bxh file!')
                 logging.warn('Assuming it is interleaved up!')
                 num_slices = int(element['size'])
-                interleave_order = range(1, num_slices+1, 2) + range(2, num_slices+1, 2)
+                interleave_order = list(range(1, num_slices+1, 2)) + list(range(2, num_slices+1, 2))
                 slice_order_list = [x for _,x in sorted(zip(interleave_order, range(1,num_slices+1)))]
     factor = tr/num_slices
     st = []
@@ -454,6 +453,11 @@ def create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir):
 
     logging.info('---FINISH: create_bvecs_bvals---')
 
+
+output_dir_func = lambda target_study_dir, bxh_info_dict, scan_type: \
+    os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], scan_type) if bxh_info_dict['ses'] != "" \
+    else os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], scan_type) 
+
 # def convert_bxh(bxh_file, ses_dict, target_study_dir=None):
 def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     #Read in the bxh_file using xmltodict
@@ -474,7 +478,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     if bxh_info_dict['scan_type'] == 'func':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'func')
+        output_dir = output_dir_func(target_study_dir, bxh_info_dict, "func")
+
         if not os.path.exists(output_dir):
             logging.info('Creating directory: '+str(output_dir))
             os.makedirs(output_dir)
@@ -519,7 +524,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     elif bxh_info_dict['scan_type'] == 'fmap':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'fmap')
+        output_dir = output_dir_func(target_study_dir, bxh_info_dict, "fmap")
 
         #If the output directory does not exist, create it and
         #all upper directories.
@@ -584,7 +589,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     elif bxh_info_dict['scan_type'] == 'anat':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'anat')
+        output_dir = output_dir_func(target_study_dir, bxh_info_dict, "anat")
+
         #If the output directory does not exist, create it and
         #all upper directories.
         if not os.path.exists(output_dir):
@@ -618,7 +624,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     elif bxh_info_dict['scan_type'] == 'dwi':
 
         #Put together the output directory
-        output_dir = os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], 'ses-'+bxh_info_dict['ses'], 'dwi')
+        output_dir = output_dir_func(target_study_dir, bxh_info_dict, "dwi")
 
         #If the output directory does not exist, create it and
         #all upper directories.
@@ -749,7 +755,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
         image_ext = '.nii'
     output_file_name = this_entry_dict['output_name'].split(image_ext)[0]
     #The prefix will be everything before the final file label (i.e. "bold", "events", etc.)
-    this_entry_dict['output_prefix'] = string.join(output_file_name.split('_')[:-1],'_')
+    this_entry_dict['output_prefix'] = "_".join(output_file_name.split('_')[:-1])
 
     #Add this bxh file's dictionary to the growing list.
     #Unless it's not supported.
@@ -764,7 +770,7 @@ def create_output_name(bxh_info_dict):
     #This function takes as input a dictionary from the
     #multi_bxh_info_dict collection.
 
-    output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses'])
+    output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses']) if bxh_info_dict['ses'] != "" else 'sub-'+str(bxh_info_dict['sub']) 
 
     output_suffix = ''
     for bids_label in ['task', 'acq', 'ce', 'rec', 'run', 'echo', 'mod']:
@@ -782,7 +788,7 @@ def create_output_name(bxh_info_dict):
 
     #Construct the output prefix
     outname = output_name.split(output_ext)[0]
-    return_prefix = string.join(outname.split('_')[:-1],'_')
+    return_prefix = "_".join(outname.split('_')[:-1])
 
     return [output_name, return_prefix]
 
