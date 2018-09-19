@@ -38,6 +38,22 @@
                     "type": "anat",
                     "label": "T1w"
                     },
+    "Ax MPRAGE": {
+                    "type": "anat",
+                    "label": "T1w"
+                    },
+    "1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
+    "2x2x2Ax DWI  30 directions Hyperband": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
+    "HCP DTI": {
+                    "type": "dwi",
+                    "label": "dwi"
+                },
     "Ax DTI": {
                     "type": "dwi",
                     "label": "dwi"
