@@ -532,6 +532,8 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             logging.info('Creating directory: '+str(output_dir))
             os.makedirs(output_dir)
 
+        bxh_desc = bxh_info_dict['bxh_desc']
+
         #Make sure the data are in a known format
         if bxh_desc == 'ncanda-grefieldmap-v1':
             #There should be three .nii.gz files associated with this acquisition.
@@ -713,6 +715,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     this_entry_dict['scan_label'] = scan_label = template[bxh_desc]['label']
     this_entry_dict['sub'] = ses_dict['sub']
     this_entry_dict['ses'] = ses_dict['ses']
+    this_entry_dict['bxh_desc'] = bxh_desc
 
     #If it is a functional image, match the acquisition number with
     #an entry in the session info. file/dictionary.
