@@ -50,6 +50,14 @@
                     "type": "dwi",
                     "label": "dwi"
                     },
+    "1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
+    "ORIG: 1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
     "HCP DTI": {
                     "type": "dwi",
                     "label": "dwi"
