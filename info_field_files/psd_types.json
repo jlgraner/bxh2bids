@@ -58,6 +58,10 @@
                     "type": "dwi",
                     "label": "dwi"
                     },
+    "ORIG: 1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
     "HCP DTI": {
                     "type": "dwi",
                     "label": "dwi"
