@@ -54,6 +54,10 @@
                     "type": "dwi",
                     "label": "dwi"
                     },
+    "HCP DTI reverse polarity": {
+                    "type": "dwi",
+                    "label": "dwi"
+                    },
     "ORIG: 1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
                     "type": "dwi",
                     "label": "dwi"
