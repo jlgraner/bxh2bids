@@ -106,6 +106,10 @@
                     "type": "notsupported",
                     "label": "b0"
                     },
+    "(fMRI) EPI reverse polarity": {
+                    "type": "func",
+                    "label": "bold"
+                    },
     "SC:Ax FSPGR BRAVO": {
                     "type": "anat",
                     "label": "T1w"
