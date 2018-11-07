@@ -229,6 +229,46 @@ def match_fmap(image_to_copy, ses_dict):
     return fmap_id_string
 
 
+def match_dwi(image_to_copy, ses_dict):
+
+    logging.info('--START: match_dwi--')
+
+    #Isolate the file name
+    file_name = os.path.split(image_to_copy)[-1]
+
+    #Start the output name
+    output_prefix = 'sub-'+str(ses_dict['sub'])+'_ses-'+str(ses_dict['ses'])
+
+    #Extract information from the session dictionary
+    if 'dwis' in ses_dict.keys():
+        dwi_scan_strings = ses_dict['dwis'].keys()
+        #Try to match the file name with one of the dwi strings (e.g. '005')
+        file_identified = 0
+        for element in dwi_scan_strings:
+            if element in file_name:
+                file_identified = file_identified + 1 #this should never be > 1
+                if file_identified > 1:
+                    logging.error('dwi file matched with more than one acquisition id string!')
+                    logging.error('Check your session info file!')
+                    logging.error('File name: '+str(image_to_copy))
+                    logging.error('BIDS ID: '+str(bidsid))
+                    logging.error('Sess ID: '+str(sesid))
+                    raise RuntimeError('DWI file matched with > 1 acquisition id string!')
+                else:
+                    logging.info('dwi file matched with acquisition id string: '+str(element))
+                dwi_id_string = element
+        if not file_identified:
+            logging.warning('DWI file not matchted with acquisition id string!')
+            logging.warning('This may be okay...')
+            dwi_id_string = None
+    else:
+        dwi_id_string = None
+
+    logging.info('--FINISHED: match_dwi--')
+
+    return dwi_id_string
+
+
 def create_bold_json(bxh_file, full_output):
 
     logging.info('---START: create_bold_json---')
@@ -624,35 +664,35 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             full_output = os.path.join(output_dir, output_name)
             create_ncanda_json(bxh_file, full_output)
 
-        elif bxh_desc == 'HCP DTI reverse polarity':
-            #Data in the same 3D shape as a DTI acquisition, but with only a few volumes
-            #and with a reversed phase-encode direction.
-            #The first volume should be a b-value=0 image that can be used for distortion
-            #correction.
+        # elif bxh_desc == 'HCP DTI reverse polarity':
+        #     #Data in the same 3D shape as a DTI acquisition, but with only a few volumes
+        #     #and with a reversed phase-encode direction.
+        #     #The first volume should be a b-value=0 image that can be used for distortion
+        #     #correction.
 
-            logging.info('Processing reverse polarity DTI data...')
+        #     logging.info('Processing reverse polarity DTI data...')
 
-            #Copy the fmap file
-            image_to_copy = bxh_info_dict['orig_image']
-            output_name = bxh_info_dict['output_name']
-            full_output = os.path.join(output_dir, output_name)
-            #Check to see if the output file already exists
-            if os.path.exists(full_output):
-                raise RuntimeError('Output file already exists: '+str(full_output))
+        #     #Copy the fmap file
+        #     image_to_copy = bxh_info_dict['orig_image']
+        #     output_name = bxh_info_dict['output_name']
+        #     full_output = os.path.join(output_dir, output_name)
+        #     #Check to see if the output file already exists
+        #     if os.path.exists(full_output):
+        #         raise RuntimeError('Output file already exists: '+str(full_output))
 
-            #Copy the image data
-            logging.info('Copying file: '+str(image_to_copy))
-            logging.info('Target location: '+str(full_output))
-            copy_image(image_to_copy, full_output)
+        #     #Copy the image data
+        #     logging.info('Copying file: '+str(image_to_copy))
+        #     logging.info('Target location: '+str(full_output))
+        #     copy_image(image_to_copy, full_output)
 
-            #Put together the sidecar .json file
-            output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-            full_output = os.path.join(output_dir, output_name)
-            create_dwi_json(bxh_file, full_output)
+        #     #Put together the sidecar .json file
+        #     output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        #     full_output = os.path.join(output_dir, output_name)
+        #     create_dwi_json(bxh_file, full_output)
 
-            #Create bvec and bval files
-            logging.info('Creating bvec and bval files for DTI fmap...')
-            create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
+        #     #Create bvec and bval files
+        #     logging.info('Creating bvec and bval files for DTI fmap...')
+        #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
 
         else:
             logging.error('B0 fieldmap description not recognized: '+str(bxh_desc))
@@ -716,7 +756,6 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
-        # shutil.copy2(image_to_copy, full_output)
         copy_image(image_to_copy, full_output)
 
         #Create the sidecar .json file based on the .bxh
@@ -786,7 +825,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     this_entry_dict['bxh_desc'] = bxh_desc
 
     ##TODO: This section can probably be rewritten as a single function. The
-    ##three different "match" functions can also probably be combined into one.
+    ##different "match" functions can also probably be combined into one.
 
     #If it is a functional image, match the acquisition number with
     #an entry in the session info. file/dictionary.
@@ -823,6 +862,13 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
                     this_entry_dict[bids_label] = ses_dict['fmaps'][id_string][bids_label]
                     ##NOTE: right now the IntendedFor info is NOT written to the final
                     ##.json file! It needs to be handled in create_dwi_json()!!!
+
+    elif this_entry_dict['scan_type'] == 'dwi':
+        id_string = match_dwi(image_to_copy, ses_dict)
+        if id_string is not None:
+            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod']:
+                if bids_label in ses_dict['dwis'][id_string].keys():
+                    this_entry_dict[bids_label] = ses_dict['dwis'][id_string][bids_label]
     else:
         id_string = None
 
