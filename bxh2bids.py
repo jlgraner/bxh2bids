@@ -131,17 +131,14 @@ def match_func(image_to_copy, ses_dict):
                 logging.error('Func file matched with more than one id string!')
                 logging.error('Check your hopes and dreams file!')
                 logging.error('File name: '+str(image_to_copy))
-                logging.error('BIDS ID: '+str(bidsid))
-                logging.error('Sess ID: '+str(sesid))
                 raise RuntimeError('Functional file matched with > 1 id string!')
             taskid = ses_dict['funcs'][element]['task']
             runid = ses_dict['funcs'][element]['run']
             func_id_string = element
     if not file_identified:
-        logging.error('Func file not matchted with id string!')
+        logging.error('Func file not matched with id string!')
+        logging.error('Check the session info file to make sure there is a "funcs" entry with this id string.')
         logging.error('File name: '+str(image_to_copy))
-        logging.error('BIDS ID: '+str(bidsid))
-        logging.error('Sess ID: '+str(sesid))
         raise RuntimeError('Functional file cannot be matched with id string!')
 
     logging.info('--FINISHED: match_func--')
