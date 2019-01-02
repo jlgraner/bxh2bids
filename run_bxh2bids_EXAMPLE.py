@@ -1,14 +1,17 @@
 
 
-import bxh2bids
+import bxh2bids.bxh2bids as b2b
 import os
 import json
 
 #The sessions you wish to put into BIDS format right now
-to_run = ['YYYYMMDD_#####']
+
+to_run = [
+          'YYYYMMDD_ZZZZZ'
+          ]
 
 #The json file containing information about your study sessions
-hopes_dreams_file = '[[YOUR_PATH_HERE]]/bxh2bids_hopes_dreams.json'
+hopes_dreams_file = '/my_study/mri_data/orig/bxh2bids_hopes_dreams.json'
 
 
 #--------DO NOT EDIT BELOW THIS LINE-------------#
@@ -30,7 +33,7 @@ for unique_id in to_run:
         ses_dict = json.loads(fd.read())
 
     try:
-        bxh2bids.multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir)
+        b2b.multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir)
         good_data.append(dataid)
     except Exception as ex:
         print('Data set failed to run: '+str(dataid))
