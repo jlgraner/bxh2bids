@@ -1,8 +1,17 @@
 
 
-import bxh2bids.bxh2bids as b2b
-import os
+import bxh2bids as b2b
+import os, sys
 import json
+
+#This is clunky, but lets this script get to bxh2bids from anywhere.
+this_env = os.environ
+#REPLACE THE RIGHT HALF OF THE FOLLOWING LINE TO THE PATH TO YOUR
+#COPY OF THE bxh2bids DIRECTORY AS A STRING.
+bxh2bids_dir = os.path.join(this_env['MYDIR'], 'Data', 'bxh2bids')
+
+sys.path.append(bxh2bids_dir)
+import bxh2bids as b2b
 
 #The sessions you wish to put into BIDS format right now
 
