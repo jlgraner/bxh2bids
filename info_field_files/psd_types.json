@@ -1,125 +1,114 @@
 {
-    "sensespiral": {
-                    "type": "func",
-                    "label": "bold"
-                    },
-                    
-	"sensespiral in": {
-                    "type": "func",
-                    "label": "bold"
-                    },
-
-    "sensespiral fMRI": {
-                    "type": "func",
-                    "label": "bold"
-                    },
-					
-    "3Plane Loc SSFSE": {
-                    "type": "notsupported",
-                    "label": "LOC"
-                    },
-                    
-    "3 plane loc ssfse": {
-                    "type": "notsupported",
-                    "label": "LOC"
-                    },
-
-    "ASSET calibration": {
-                    "type": "notsupported",
-                    "label": "LOC"
-                    },
-
-    "Ax FSPGR 3D BRAVO": {
-                    "type": "anat",
-                    "label": "T1w"
-                    },
-                    
-    "Ax FSPGR BRAVO": {
-                    "type": "anat",
-                    "label": "T1w"
-                    },
-    "Ax MPRAGE": {
-                    "type": "anat",
-                    "label": "T1w"
-                    },
-    "1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
-    "2x2x2Ax DWI  30 directions Hyperband": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
     "1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
-    "HCP DTI reverse polarity": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
-    "ORIG: 1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
-    "ORIG: 1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
-                    "type": "dwi",
-                    "label": "dwi"
-                    },
-    "HCP DTI": {
-                    "type": "dwi",
-                    "label": "dwi"
-                },
-    "Ax DTI": {
-                    "type": "dwi",
-                    "label": "dwi"
-              },
-
-    "Average DC": {
-                    "type": "notsupported",
-                    "label": "dwi"
-              },
-
-    "Isotropic image": {
-                    "type": "notsupported",
-                    "label": "dwi"
-              },
-
-    "Fractional Aniso.": {
-                    "type": "notsupported",
-                    "label": "dwi"
-              },
-
-    "GE EPI RT choice": {
-                    "type": "func",
-                    "label": "bold"
-                        },
-    "(fMRI) multi-phase hyperband resting": {
-                    "type": "func",
-                    "label": "bold"
-                        },
-    "ncanda-grefieldmap-v1": {
-                    "type": "fmap",
-                    "label": "b0"
-                        },
-    "B0map_RF_Test": {
-                    "type": "notsupported",
-                    "label": "b0"
-                    },
-    "(fMRI) EPI reverse polarity": {
-                    "type": "func",
-                    "label": "bold"
-                    },
-    "SC:Ax FSPGR BRAVO": {
-                    "type": "anat",
-                    "label": "T1w"
-                    },
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
     "SPGR_GRAPPA Iron": {
-                    "type": "anat",
-                    "label": "T1w"
-    			},
+        "type": "anat", 
+        "label": "T1w"
+    }, 
+    "Ax FSPGR 3D BRAVO": {
+        "type": "anat", 
+        "label": "T1w"
+    }, 
+    "B0map_RF_Test": {
+        "type": "notsupported", 
+        "label": "b0"
+    }, 
     "fMRI 481x5": {
-	    	    "type": "func",
-	    	    "label": "bold"
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "sensespiral fMRI": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "(fMRI) multi-phase hyperband resting": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "HCP DTI reverse polarity": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "Ax DTI": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "ORIG: 1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "3 plane loc ssfse": {
+        "type": "notsupported", 
+        "label": "LOC"
+    }, 
+    "SC:Ax FSPGR BRAVO": {
+        "type": "anat", 
+        "label": "T1w"
+    }, 
+    "Average DC": {
+        "type": "notsupported", 
+        "label": "dwi"
+    }, 
+    "Fractional Aniso.": {
+        "type": "notsupported", 
+        "label": "dwi"
+    }, 
+    "sensespiral": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "Ax FSPGR BRAVO": {
+        "type": "anat", 
+        "label": "T1w"
+    }, 
+    "ASSET calibration": {
+        "type": "notsupported", 
+        "label": "LOC"
+    }, 
+    "2x2x2Ax DWI  30 directions Hyperband": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "Ax MPRAGE": {
+        "type": "anat", 
+        "label": "T1w"
+    }, 
+    "(fMRI) EPI reverse polarity": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "GE EPI RT choice": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "Isotropic image": {
+        "type": "notsupported", 
+        "label": "dwi"
+    }, 
+    "3Plane Loc SSFSE": {
+        "type": "notsupported", 
+        "label": "LOC"
+    }, 
+    "1x1x1 Ax DWI TENSOR 30 directions Hyperband": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "ORIG: 1.8x1.8x1.8Ax DWI  30 directions Hyperband": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "HCP DTI": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
+    "sensespiral in": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "ncanda-grefieldmap-v1": {
+        "type": "fmap", 
+        "label": "b0"
     }
 }

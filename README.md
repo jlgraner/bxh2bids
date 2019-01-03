@@ -4,8 +4,8 @@ This repository is designed to convert MRI data collected at the Brain Image and
 
 Additional documentation and usage notes will be forthcoming.
 
-## Installation
+## Install Dependencies
 run 
 ```
-python setup.py install
+pip install -r requuirements.txt
 ```
