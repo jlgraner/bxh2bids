@@ -14,7 +14,7 @@ setup(
     author="John Graner",
     author_email="john.graner@duke.edu",
     url="http://github.com/jlgraner/bxh2bids",
-    py_modules=['bxh_pick_fields'],
+    py_modules=['bxh_pick_fields', 'add_to_psd_file'],
     install_requires=['xmltodict'],
     packages=['bxh2bids'],
     package_dir=pck_dir,
