@@ -110,5 +110,13 @@
     "ncanda-grefieldmap-v1": {
         "type": "fmap", 
         "label": "b0"
+    },
+    "field map reverse polarity": {
+        "type": "notsupported",
+        "label": "b0"
+    },
+    "field map regular": {
+        "type": "notsupported",
+        "label": "b0"
     }
 }
