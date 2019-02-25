@@ -85,7 +85,7 @@ def bxh_pick(json_file, bxh_file=None, bxh_as_dict=None):
             elif bids_style == 'float':
                 out_dict[key] = float(this_item)
             elif bids_style == 'int':
-                out_dict[key] = int(this_item)
+                out_dict[key] = int(float(this_item))
             else:
                 logging.warning('Unkown BIDS type found in field link json!')
                 logging.warning('File: '+str(json_file))
