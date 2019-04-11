@@ -7,5 +7,5 @@ Additional documentation and usage notes will be forthcoming.
 ## Install Dependencies
 run 
 ```
-pip install -r requuirements.txt
+pip install -r requirements.txt
 ```
