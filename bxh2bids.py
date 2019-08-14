@@ -773,6 +773,11 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     logging.info('----FINISH: convert_bxh----')
 
 
+def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
+
+    #Same as below, except pull all the info. from the file description
+
+
 def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
 
     #Directory and name of the bxh file
@@ -831,9 +836,6 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
         for bids_label in ['task', 'acq', 'rec', 'run', 'echo', 'tsv_file']:
             if bids_label in ses_dict['funcs'][id_string].keys():
                 this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
-        #Pull out information about any .tsv files
-        # if 'tsv_file' in ses_dict['funcs'][id_string].keys():
-        #     this_entry_dict['tsv_file'] = ses_dict['funcs'][id_string]['tsv_file']
 
     #If it is an anatomical image, try to match the acquisition number
     #with an entry in the session info. file/dictionary. NOTE: this is
@@ -979,14 +981,9 @@ def compare_output_names(multi_bxh_info_dict):
     return multi_bxh_info_dict
 
 
+def __set_logging(dataid, log_dir):
 
-def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
-    
-    logging.info('-----START: multi_bxhtobids-----')
-    
-    #Make sure the passed study directory exists
-    if not os.path.exists(source_study_dir):
-        raise RuntimeError('Study directory cannot be found: ' + str(source_study_dir))
+    logging.info('-----START: set_logging-----')
     
     #Make sure the passed log directory exists.
     #If not, create it.
@@ -994,11 +991,6 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
         print('Log file directory cannot be found!')
         print('Creating it: '+str(log_dir))
         os.makedirs(log_dir)
-
-    #Make sure there is a Data directory.
-    contents = os.listdir(source_study_dir)
-    if 'Data' not in contents:
-        raise RuntimeError('The study directory does not appear as expected: ' + str(source_study_dir))
 
     #Create log file
     time_stamp = str(time.localtime()[1])+str(time.localtime()[2])+str(time.localtime()[0])+str(time.localtime()[3])+str(time.localtime()[4])
@@ -1020,7 +1012,98 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     rootLogger.addHandler(fileHandler)
     
     logging.info('Created this log file.')
+
+
+def __find_bxh_files(input_dir):
+
+    bxh_list = []
+    if os.path.exists(input_dir):
+        logging.info('Looking for .bxh files in: '+str(input_dir))
+        for element in os.listdir(input_dir):
+            if element[-4:] == '.bxh':
+                bxh_list.append({'bxhfile':os.path.join(input_dir, element), 'type':'anat'})
+                logging.info('Found .bxh file: '+str(os.path.join(input_dir, element)))
+    else:
+        raise RuntimeError('Passed directory not found: '+str(input_dir))
+
+    return bxh_list
+
+
+def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, events_files_dir, log_dir):
+
+    __set_logging(dataid, log_dir)
+
+    logging.info('-----START: multi_bxhtobids-----')
     
+    #Make sure the passed study directory exists
+    if not os.path.exists(source_study_dir):
+        raise RuntimeError('Study directory cannot be found: ' + str(source_study_dir))
+
+    #Make sure there is a Data directory.
+    contents = os.listdir(source_study_dir)
+    if 'Data' not in contents:
+        raise RuntimeError('The study directory does not appear as expected: ' + str(source_study_dir))
+
+    #Make sure the passed events_files_dir exists
+    if not os.path.exists(events_files_dir):
+        raise RuntimeError('Events Files directory cannot be found: ' + str(events_files_dir))
+
+    #Record input arguments
+    bidsid = data_info['sub']
+    sesid = data_info['ses']
+
+    #Record input arguments
+    logging.info('--------------------------')
+    logging.info('dataid: '+str(dataid))
+    logging.info('bidsid: '+str(bidsid))
+    logging.info('sesid: '+str(sesid))
+    logging.info('source_study_dir: '+str(source_study_dir))
+    logging.info('events_files_dir: '+str(events_files_dir))
+    logging.info('target_study_dir: '+str(target_study_dir))
+    logging.info('log_dir: '+str(log_dir))
+
+    #Make sure dataid is in the format of a subject data directory
+    r = re.compile('^\d\d\d\d\d\d\d\d_\d\d\d\d\d$')
+    if r.match(dataid) is None:
+        raise RuntimeError('dataid does not look like a data directory: '+str(dataid))
+    
+    #Look for the data directories in the Anat and Func directories
+    anat_dir = os.path.join(source_study_dir, 'Data', 'Anat', dataid)
+    func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
+    if not os.path.exists(anat_dir):
+        logging.info('No anatomy data directory found for id: '+str(dataid))
+    else:
+        anat_bxh_list = __find_bxh_files(anat_dir)
+
+    if not os.path.exists(func_dir):
+        logging.info('No functional data directory found for id: '+str(dataid))
+    else:
+        func_bxh_list = __find_bxh_files(func_dir)
+
+    bxh_list = anat_bxh_list + func_bxh_list
+
+    #Construct dictionaries with information about all the bxh files
+    multi_bxh_info_dict = {}
+    for file_item in bxh_list:
+        multi_bxh_info_dict = auto_create_internal_info(file_item['bxhfile'], data_info, multi_bxh_info_dict)
+
+
+def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
+    
+
+    __set_logging(dataid, log_dir)
+
+    logging.info('-----START: multi_bxhtobids-----')
+    
+    #Make sure the passed study directory exists
+    if not os.path.exists(source_study_dir):
+        raise RuntimeError('Study directory cannot be found: ' + str(source_study_dir))
+
+    #Make sure there is a Data directory.
+    contents = os.listdir(source_study_dir)
+    if 'Data' not in contents:
+        raise RuntimeError('The study directory does not appear as expected: ' + str(source_study_dir))
+
     bidsid = ses_dict['sub']
     sesid = ses_dict['ses']
 
@@ -1041,26 +1124,37 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     #Look for the data directories in the Anat and Func directories
     anat_dir = os.path.join(source_study_dir, 'Data', 'Anat', dataid)
     func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
+    if not os.path.exists(anat_dir):
+        logging.info('No anatomy data directory found for id: '+str(dataid))
+    else:
+        anat_bxh_list = __find_bxh_files(anat_dir)
+
+    if not os.path.exists(func_dir):
+        logging.info('No functional data directory found for id: '+str(dataid))
+    else:
+        func_bxh_list = __find_bxh_files(func_dir)
+
+    bxh_list = anat_bxh_list + func_bxh_list
     
     #Find .bxh files in the anat and func dirs
-    bxh_list = []
-    if os.path.exists(anat_dir):
-        logging.info('Looking for .bxh files in: '+str(anat_dir))
-        for element in os.listdir(anat_dir):
-            if element[-4:] == '.bxh':
-                bxh_list.append({'bxhfile':os.path.join(anat_dir, element), 'type':'anat'})
-                logging.info('Found .bxh file: '+str(os.path.join(anat_dir, element)))
-    else:
-        logging.info('No anatomy data directory found for id: '+str(dataid))
+    # bxh_list = []
+    # if os.path.exists(anat_dir):
+    #     logging.info('Looking for .bxh files in: '+str(anat_dir))
+    #     for element in os.listdir(anat_dir):
+    #         if element[-4:] == '.bxh':
+    #             bxh_list.append({'bxhfile':os.path.join(anat_dir, element), 'type':'anat'})
+    #             logging.info('Found .bxh file: '+str(os.path.join(anat_dir, element)))
+    # else:
+    #     logging.info('No anatomy data directory found for id: '+str(dataid))
         
-    if os.path.exists(func_dir):
-        logging.info('Looking for .bxh files in: '+str(func_dir))
-        for element in os.listdir(func_dir):
-            if element[-4:] == '.bxh':
-                bxh_list.append({'bxhfile':os.path.join(func_dir, element), 'type':'func'})
-                logging.info('Found .bxh file: '+str(os.path.join(func_dir, element)))
-    else:
-        logging.info('No functional data directory found for id: '+str(dataid))
+    # if os.path.exists(func_dir):
+    #     logging.info('Looking for .bxh files in: '+str(func_dir))
+    #     for element in os.listdir(func_dir):
+    #         if element[-4:] == '.bxh':
+    #             bxh_list.append({'bxhfile':os.path.join(func_dir, element), 'type':'func'})
+    #             logging.info('Found .bxh file: '+str(os.path.join(func_dir, element)))
+    # else:
+    #     logging.info('No functional data directory found for id: '+str(dataid))
     
     #Construct dictionaries with information about all the bxh files
     multi_bxh_info_dict = {}
