@@ -776,6 +776,74 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
 def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
 
     #Same as below, except pull all the info. from the file description
+    #Directory and name of the bxh file
+    bxh_dir, bxh_name = os.path.split(bxh_file)
+    
+    #Create dictionary entry for this bxh file
+    this_entry_dict = {}
+
+    #Load the contents of the bxh file into a dictionary
+    with open(bxh_file) as fd:
+        bxh_dict = xmltodict.parse(fd.read())
+    
+    #Get the image file associated with the bxh
+    image_to_copy = os.path.join(bxh_dir, bxh_dict['bxh']['datarec']['filename'])
+    #See if the actual image file is a .gz
+    if not os.path.exists(image_to_copy):
+        logging.info('Filename as stored in the bxh file cannot be found.')
+        logging.info('Looking for .nii.gz...')
+        if os.path.exists(str(image_to_copy)+'.gz'):
+            logging.info('Found .gz version of image.')
+            image_to_copy = str(image_to_copy)+'.gz'
+
+    this_entry_dict['orig_image'] = image_to_copy
+
+    #Get the description of the scan
+    bxh_desc = bxh_dict['bxh']['acquisitiondata']['description']
+
+    #Split the description to get scan type and various characteristics
+    desc_parts = bxh_desc.split('_')
+
+    #If the description is in the correct form, the parts should have
+    #more than one entry.
+    if len(desc_parts) == 1:
+        logging.error('bxh file description not in expected format!')
+        logging.error('bxh file: '+str(bxh_file))
+        logging.error('bxh description: '+str(bxh_desc))
+        raise RuntimeError('bxh file description not in expected format: '+str(bxh_file))
+
+    this_entry_dict['scan_type'] = desc_parts[0]
+    this_entry_dict['scan_label'] = desc_parts[-1]
+    this_entry_dict['sub'] = data_info['sub']
+    this_entry_dict['ses'] = data_info['ses']
+    this_entry_dict['bxh_desc'] = bxh_desc
+
+    #Look for potential BIDS file name labels and add them to the entry dictionary if they are there
+    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'IntendedFor', 'tsv_file']:
+        for element in desc_parts[1:-1]:
+            if element.split('-')[0] == bids_label:
+                this_entry_dict[bids_label] = element.split('-')[-1]
+
+    #Construct the output image file name
+    naming_output = create_output_name(this_entry_dict)
+    this_entry_dict['output_name'] = naming_output[0]
+    this_entry_dict['output_prefix'] = naming_output[1]
+
+    #Set the output prefix
+    if this_entry_dict['output_name'][-3:] == '.gz':
+        image_ext = '.nii.gz'
+    else:
+        image_ext = '.nii'
+    output_file_name = this_entry_dict['output_name'].split(image_ext)[0]
+    #The prefix will be everything before the final file label (i.e. "bold", "events", etc.)
+    this_entry_dict['output_prefix'] = "_".join(output_file_name.split('_')[:-1])
+
+    #Add this bxh file's dictionary to the growing list.
+    #Unless it's not supported.
+    if this_entry_dict['scan_type'] in ['anat', 'func', 'dwi', 'fmap']:
+        multi_bxh_info_dict[bxh_name] = this_entry_dict
+    
+    return multi_bxh_info_dict
 
 
 def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
