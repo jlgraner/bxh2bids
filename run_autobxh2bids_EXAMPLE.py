@@ -1,6 +1,5 @@
 
 
-import bxh2bids as b2b
 import os, sys
 import json
 

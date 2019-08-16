@@ -773,7 +773,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     logging.info('----FINISH: convert_bxh----')
 
 
-def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
+def auto_create_internal_info(bxh_file, events_files_dir, data_info, multi_bxh_info_dict):
 
     #Same as below, except pull all the info. from the file description
     #Directory and name of the bxh file
@@ -807,10 +807,11 @@ def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
     #If the description is in the correct form, the parts should have
     #more than one entry.
     if len(desc_parts) == 1:
-        logging.error('bxh file description not in expected format!')
-        logging.error('bxh file: '+str(bxh_file))
-        logging.error('bxh description: '+str(bxh_desc))
-        raise RuntimeError('bxh file description not in expected format: '+str(bxh_file))
+        logging.warning('bxh file description not in expected format!')
+        logging.warning('bxh file: '+str(bxh_file))
+        logging.warning('bxh description: '+str(bxh_desc))
+        logging.warning('This bxh file will not be processed!')
+        return multi_bxh_info_dict
 
     this_entry_dict['scan_type'] = desc_parts[0]
     this_entry_dict['scan_label'] = desc_parts[-1]
@@ -819,7 +820,7 @@ def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
     this_entry_dict['bxh_desc'] = bxh_desc
 
     #Look for potential BIDS file name labels and add them to the entry dictionary if they are there
-    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'IntendedFor', 'tsv_file']:
+    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'IntendedFor']:
         for element in desc_parts[1:-1]:
             if element.split('-')[0] == bids_label:
                 this_entry_dict[bids_label] = element.split('-')[-1]
@@ -828,6 +829,10 @@ def auto_create_internal_info(bxh_file, data_info, multi_bxh_info_dict):
     naming_output = create_output_name(this_entry_dict)
     this_entry_dict['output_name'] = naming_output[0]
     this_entry_dict['output_prefix'] = naming_output[1]
+
+    #Create the expected tsv events file name, if func
+    if this_entry_dict['scan_type'] == 'func':
+        this_entry_dict['tsv_file'] = os.path.join(events_files_dir, this_entry_dict['output_prefix']+'_events.tsv')
 
     #Set the output prefix
     if this_entry_dict['output_name'][-3:] == '.gz':
@@ -1153,7 +1158,24 @@ def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, e
     #Construct dictionaries with information about all the bxh files
     multi_bxh_info_dict = {}
     for file_item in bxh_list:
-        multi_bxh_info_dict = auto_create_internal_info(file_item['bxhfile'], data_info, multi_bxh_info_dict)
+        multi_bxh_info_dict = auto_create_internal_info(file_item['bxhfile'], events_files_dir, data_info, multi_bxh_info_dict)
+
+    #Make sure the output file names are unique. If not, try to fix them.
+    multi_bxh_info_dict = compare_output_names(multi_bxh_info_dict)
+
+    #Process bxh files
+    for file_item in bxh_list:
+        bxh_file_name = os.path.split(file_item['bxhfile'])[-1]
+        if bxh_file_name in multi_bxh_info_dict.keys():
+            logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
+            bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
+            convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
+        
+    #Create dataset_description.json if it does not already exist
+    logging.info('Running create_dataset_description().')
+    create_dataset_description(target_study_dir)
+
+    logging.info('-----FINISH: multi_bxhtobids-----')
 
 
 def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
