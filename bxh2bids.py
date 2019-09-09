@@ -963,6 +963,8 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     if this_entry_dict['scan_type'] != 'notsupported':
         multi_bxh_info_dict[bxh_name] = this_entry_dict
 
+    print(multi_bxh_info_dict)
+
     return multi_bxh_info_dict
 #####################
 
@@ -970,6 +972,8 @@ def create_output_name(bxh_info_dict):
 
     #This function takes as input a dictionary from the
     #multi_bxh_info_dict collection.
+
+    logging.info('Creating output name...')
 
     output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses']) if bxh_info_dict['ses'] != "" else 'sub-'+str(bxh_info_dict['sub']) 
 
@@ -1145,13 +1149,13 @@ def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, e
     func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
     if not os.path.exists(anat_dir):
         logging.info('No anatomy data directory found for id: '+str(dataid))
-        anat_bxh_list = ''
+        anat_bxh_list = ['']
     else:
         anat_bxh_list = __find_bxh_files(anat_dir)
 
     if not os.path.exists(func_dir):
         logging.info('No functional data directory found for id: '+str(dataid))
-        func_bxh_list = ''
+        func_bxh_list = ['']
     else:
         func_bxh_list = __find_bxh_files(func_dir)
 
@@ -1218,35 +1222,17 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
     if not os.path.exists(anat_dir):
         logging.info('No anatomy data directory found for id: '+str(dataid))
+        anat_bxh_list = []
     else:
         anat_bxh_list = __find_bxh_files(anat_dir)
 
     if not os.path.exists(func_dir):
         logging.info('No functional data directory found for id: '+str(dataid))
+        func_bxh_list = []
     else:
         func_bxh_list = __find_bxh_files(func_dir)
 
     bxh_list = anat_bxh_list + func_bxh_list
-    
-    #Find .bxh files in the anat and func dirs
-    # bxh_list = []
-    # if os.path.exists(anat_dir):
-    #     logging.info('Looking for .bxh files in: '+str(anat_dir))
-    #     for element in os.listdir(anat_dir):
-    #         if element[-4:] == '.bxh':
-    #             bxh_list.append({'bxhfile':os.path.join(anat_dir, element), 'type':'anat'})
-    #             logging.info('Found .bxh file: '+str(os.path.join(anat_dir, element)))
-    # else:
-    #     logging.info('No anatomy data directory found for id: '+str(dataid))
-        
-    # if os.path.exists(func_dir):
-    #     logging.info('Looking for .bxh files in: '+str(func_dir))
-    #     for element in os.listdir(func_dir):
-    #         if element[-4:] == '.bxh':
-    #             bxh_list.append({'bxhfile':os.path.join(func_dir, element), 'type':'func'})
-    #             logging.info('Found .bxh file: '+str(os.path.join(func_dir, element)))
-    # else:
-    #     logging.info('No functional data directory found for id: '+str(dataid))
     
     #Construct dictionaries with information about all the bxh files
     multi_bxh_info_dict = {}
