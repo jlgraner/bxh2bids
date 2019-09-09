@@ -1145,11 +1145,13 @@ def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, e
     func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
     if not os.path.exists(anat_dir):
         logging.info('No anatomy data directory found for id: '+str(dataid))
+        anat_bxh_list = ''
     else:
         anat_bxh_list = __find_bxh_files(anat_dir)
 
     if not os.path.exists(func_dir):
         logging.info('No functional data directory found for id: '+str(dataid))
+        func_bxh_list = ''
     else:
         func_bxh_list = __find_bxh_files(func_dir)
 
