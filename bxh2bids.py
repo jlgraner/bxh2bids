@@ -326,10 +326,18 @@ def create_bold_json(bxh_file, full_output):
                 num_slices = int(element['size'])
                 interleave_order = list(range(1, num_slices+1, 2)) + list(range(2, num_slices+1, 2))
                 slice_order_list = [x for _,x in sorted(zip(interleave_order, range(1,num_slices+1)))]
-    factor = tr/num_slices
+
+    #Create an integer version of the slice timing list
+    slice_int_list = []
+    for element in slice_order_list:
+        slice_int_list.append(int(element))
+
+    #Use the maximum slice index to calculate the time factor. This will
+    #also work for multi-band images.
+    factor = tr/max(slice_int_list)
     st = []
-    for s in slice_order_list:
-        st.append(factor * (int(s)-1))
+    for s in slice_int_list:
+        st.append(factor * (s-1))
 
     out_dict['TaskName'] = taskname
     out_dict['SliceTiming'] = st
@@ -962,8 +970,6 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     #Unless it's not supported.
     if this_entry_dict['scan_type'] != 'notsupported':
         multi_bxh_info_dict[bxh_name] = this_entry_dict
-
-    print(multi_bxh_info_dict)
 
     return multi_bxh_info_dict
 #####################
