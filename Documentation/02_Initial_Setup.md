@@ -20,3 +20,5 @@ For now we'll deal with the first four fields in the file and revisit the list o
 
 ### 2) Session Info. Files
 If it doesn't exist yet, create the `ses_info_dir` you specified in your bxh2bids_hopes_dreams.json file. Then create a new copy of .../bxh2bids/Template_files/bxh2bids_YYYYMMDD_ZZZZZ.json in that directory.
+
+The session info files link the secific images in the original Data directory to the categories of images BIDS recognizes. The files also allow you to specify any additional BIDS tag values for each image.
