@@ -17,3 +17,6 @@ For now we'll deal with the first four fields in the file and revisit the list o
 `log_dir` is a directory to which you want bxh2bids to write log files. This can be anywhere. The log files will be ASCII text files and shouldn't be very big. *EXAMPLE:* I personally tend to keep log files near my data, so I might set this to something like: `/mydir/studies/BIDS/logs`, but its location is at your descretion.
 
 `ses_info_dir` is a directory in which you will store bxh2bids session information files. These files (which we will create in the next section) contain some basic information that tells bxh2bids what type of imaging data are associated with each .bxh file. This dierectory can be anywhere but I would recommend putting it close to your copied `bxh2bids_hopes_dreams.json` file. *EXAMPLE:* If my hopes/dreams file is here: `/mydir/studies/mystudy01/bxh2bids_hopes_dreams.json` I would probably set `ses_info_dir` to: `/mydir/studies/mystudy01/bxh2bids_ses_info`.
+
+### 2) Session Info. Files
+If it doesn't exist yet, create the `ses_info_dir` you specified in your bxh2bids_hopes_dreams.json file. Then create a new copy of .../bxh2bids/Template_files/bxh2bids_YYYYMMDD_ZZZZZ.json in that directory.
