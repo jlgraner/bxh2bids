@@ -29,14 +29,13 @@ with open(hopes_dreams_file) as fd:
 source_study_dir = hopes_dreams['source_study_dir']
 target_study_dir = hopes_dreams['target_study_dir']
 ses_info_dir = hopes_dreams['ses_info_dir']
-ses_files = hopes_dreams['ses_files']
 log_dir = hopes_dreams['log_dir']
 
 bad_data = []
 good_data = []
 for unique_id in to_run:
     dataid = unique_id
-    ses_info_file = os.path.join(ses_info_dir, hopes_dreams['ses_files'][dataid])
+    ses_info_file = os.path.join(ses_info_dir, 'bxh2bids_{}.json'.format(unique_id))
     with open(ses_info_file) as fd:
         ses_dict = json.loads(fd.read())
 
