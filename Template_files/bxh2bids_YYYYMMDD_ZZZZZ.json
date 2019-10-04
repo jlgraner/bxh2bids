@@ -28,5 +28,15 @@
                     "acq": "[[acquisition name]]",
                     "run": "##"
                     }
-        }
+        },
+"fmaps": {
+          "###":    {
+                    "acq": "[[acquisition name]]"
+                    }
+          },
+"dwis": {
+          "###":    {
+                    "acq": "[[acqusition name]]"
+                    }
+          }
 }
