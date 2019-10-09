@@ -36,6 +36,11 @@ good_data = []
 for unique_id in to_run:
     dataid = unique_id
     ses_info_file = os.path.join(ses_info_dir, 'bxh2bids_{}.json'.format(unique_id))
+    if not os.path.exists(ses_info_file):
+        print('Session info file cannot be found: {}'.format(ses_info_file))
+        print('NOTE: As of 10/9/19 bxh2bids requires the session info file names to be of the form: "bxh2bids_YYYYMMDD_ZZZZZ.json".')
+        print('Here, YYYYMMDD_ZZZZZ is the scan date and exam number.')
+        raise RuntimeError('Session info file not found')
     with open(ses_info_file) as fd:
         ses_dict = json.loads(fd.read())
 
