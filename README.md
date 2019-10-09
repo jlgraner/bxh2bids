@@ -2,7 +2,10 @@
 
 This repository is designed to convert MRI data collected at the Brain Image and Analysis Center [(BIAC)](https://www.biac.duke.edu/) at Duke University into the standard Brain Imaging Data Structure [(BIDS)](http://bids.neuroimaging.io/).
 
-Additional documentation and usage notes will be forthcoming.
+Additional documentation and usage notes are still in progress but can be found in the Documents folder.
+
+## Update Notes:
+**10/09/2019**: Session info. files must now be named in the form "bxh2bids_YYYYMMDD_ZZZZZ.json", where "YYYYMMDD_ZZZZZ" is the date and exam number. The "...hopes_dreams.json" file no longer requires the "ses_files" field (so you no longer need to add an entry for every scan session!).
 
 ## Install Dependencies
 run 
