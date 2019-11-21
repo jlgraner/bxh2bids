@@ -27,10 +27,6 @@
                             "location": ["bxh", "acquisitiondata", "description"],
                             "BIDSstyle": "string"
                         },
-    "EffectiveEchoSpacing": {
-                            "location": ["bxh", "acquisitiondata", "echospacing"],
-                            "BIDSstyle": "float"
-                        },
     "EchoTime": {
                     "location": ["bxh", "acquisitiondata", "te"],
                     "BIDSstyle": "float"
