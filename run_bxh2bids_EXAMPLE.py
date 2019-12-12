@@ -25,8 +25,8 @@ log_dir="DIRECTORY WHERE YOU WANT THIS SCRIPT TO WRITE LOG FILES"
 ses_info_dir="DIRECTORY WHERE YOU WILL STORE YOUR SESSION INFO FILES"
 
 #--------DO NOT EDIT BELOW THIS LINE-------------#
-with open(hopes_dreams_file) as fd:
-    hopes_dreams = json.loads(fd.read())
+#with open(hopes_dreams_file) as fd:
+#    hopes_dreams = json.loads(fd.read())
 
 #source_study_dir = hopes_dreams['source_study_dir']
 #target_study_dir = hopes_dreams['target_study_dir']
