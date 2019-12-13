@@ -18,19 +18,13 @@ to_run = [
           'YYYYMMDD_ZZZZZ'
           ]
 
-#The json file containing information about your study sessions
-hopes_dreams_file = '/my_study/mri_data/orig/bxh2bids_hopes_dreams.json'
-
+#Set information about your study sessions
+source_study_dir="PATH CONTAINING YOUR 'Data' DIRECTORY"
+target_study_dir="WHERE YOU WANT THE BIDS DATA TO BE WRITTEN. THE LAST ELEMENT OF THE PATH WILL BE THE STUDY NAME."
+log_dir="DIRECTORY WHERE YOU WANT THIS SCRIPT TO WRITE LOG FILES"
+ses_info_dir="DIRECTORY WHERE YOU WILL STORE YOUR SESSION INFO FILES"
 
 #--------DO NOT EDIT BELOW THIS LINE-------------#
-with open(hopes_dreams_file) as fd:
-    hopes_dreams = json.loads(fd.read())
-
-source_study_dir = hopes_dreams['source_study_dir']
-target_study_dir = hopes_dreams['target_study_dir']
-ses_info_dir = hopes_dreams['ses_info_dir']
-log_dir = hopes_dreams['log_dir']
-
 bad_data = []
 good_data = []
 for unique_id in to_run:
