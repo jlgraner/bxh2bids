@@ -21,7 +21,7 @@ Current general flow of initial setup and usage:
    - The library you are most likely to not have installed already is xmltodict. This should be easily installable
      via pip (`pip install xmltodict`). However, if this doesn't work the package can be downloaded [here](https://pypi.python.org/pypi/xmltodict).
 #### 3. Edit/create a couple files so bxh2bids can find your data and match functional .bxh files to specific tasks.
-#### 4. Edit run_bxh2bids.py and call it via python in a commmand line.
+#### 4. Edit a copy of run_bxh2bids_EXAMPLE.py and call it via python in a commmand line.
 
 Once things are set up, running new data sessions just requires a subset of step 3 and then step 4.
 
