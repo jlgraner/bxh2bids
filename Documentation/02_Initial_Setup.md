@@ -25,3 +25,15 @@ Next, there are four variables you'll have to set involving data input/output lo
 If it doesn't exist yet, create the `ses_info_dir` you specified in your copied and edited run_bxh2bids_YOURSTUDY.py file. Then create a new copy of .../bxh2bids/Template_files/bxh2bids_YYYYMMDD_ZZZZZ.json in that session info directory.
 
 The session info files link the secific images in the original Data directory to the categories of images BIDS recognizes. The files also allow you to specify any additional BIDS tag values for each image.
+
+### 3) Common Errors
+The first time attempting to run bxh2bids you will almost certainly see a "Scan description not found in template file!" error, followed by a line containing the scan description that could not be found and the path to your `psd_types.json` file.
+The `bxh2bids/info_field_files/psd_types.json` file is meant to use the scan descriptions found in the .bxh files to determine the BIDS type and appropriate BIDS label for each image file. Unfortunately, there are many more scan descriptions out there than I thought there would be!
+
+When you see that error, the solution (which, admittedly, is not very user-friendly right now) is to open the `psd_types.json` file and add an entry for the listed scan description (which should be listed in the error log). The easiest way to do this is to open the file, copy/paste an existing entry for a similar image type and then edit the entry for the new description.
+
+There are four options for the "type" field: "anat", "func", "dwi", "notsupported". The first three are self-explanatory (anatomical image, functional image, or diffusion-weighted image). The last one is specific to bxh2bids and is used to identify image files you don't want moved over into your BIDS-format output. For example, there are entries in the psd_types.json file for various localizer images that specify them as "notsupported" since they aren't useful in preprocessing or analysis.
+
+Options for the "label" field include "T1w", "T2w", "bold", "dwi", and "b0".
+
+One note about adding entries to the .json file: the json format is very picky about the placement of brackets and commas. If you edit the file and get a strange-looking error from bxh2bids that ends in listing a column number and a row number, it's most likely related to an improper json formatting.
