@@ -2,6 +2,56 @@
 
 import json
 import os, platform
+import sys, logging
+import tkinter
+from tkinter.filedialog import asksaveasfile
+
+
+def add_info(template_file, bxh_file, bxh_desc):
+
+    logging.info('Loading PSD add GUI...')
+
+    #Make sure psd type file is there
+    if not os.path.exists(template_file):
+        print('PSD info file not found!')
+        print('File looked for: {}'.format(template_file))
+        raise RuntimeError('PSD info file not found')
+
+    bids_type, bids_label = get_info_gui(bxh_file, bxh_desc)
+
+
+def get_info_gui(bxh_file, bxh_desc):
+
+    window = tk.Tk()
+    window.title('Get PSD Info.')
+
+    frame_a = tk.Frame()
+    bxh_file_sign_lbl = tk.Label(master=frame_a, text='BXH File: ')
+    bxh_file_lbl = tk.Label(master=frame_a, text='{}'.format(bxh_file))
+    bxh_desc_sign_lbl = tk.Label(master=frame_a, text='Acquisition Description: ')
+    bxh_desc_lbl = tk.Label(master=frame_a, text='{}'.format(bxh_desc))
+    bxh_file_sign_lbl.grid(row=0, column=0)
+    bxh_file_lbl.grid(row=0, column=1)
+    bxh_desc_sign_lbl.grid(row=1, column=0)
+    bxh_desc_lbl.grid(row=1, column=1)
+
+    frame_b = tk.Frame()
+    bids_type_lbl = tk.Label(master=frame_b, text="BIDS type:")
+    bids_type_ent = tk.Entry(master=frame_b)
+    bids_label_lbl = tk.Label(master=frame_b, text="BIDS label:")
+    bids_label_ent = tk.Entry(master=frame_b)
+    submit = tk.Button(master=frame_b,text='Set PSD Info',command=add_psd_info)
+    bids_type_lbl.grid(row=0, column=0, sticky='w')
+    bids_type_ent.grid(row=0, column=1, sticky='w')
+    bids_label_lbl.grid(row=1, column=0, sticky='w')
+    bids_label_ent.grid(row=1, column=1, sticky='w')
+    submit.grid(row=2, column=1)
+
+    frame_a.pack(fill=tk.X, expand=True)
+    frame_b.pack(fill=tk.X, expand=True)
+
+    window.mainloop()
+
 
 def main():
 
@@ -62,4 +112,7 @@ def get_info():
 
 
 if __name__ == '__main__':
+    here = os.path.dirname(os.path.realpath(__file__))
+    sys.path.append(here)
+    import bxh2bids as b2b
     main()

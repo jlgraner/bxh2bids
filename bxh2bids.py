@@ -45,6 +45,7 @@ import logging, time
 import bxh_pick_fields
 import string
 import gzip
+import tkinter as tk
 
 
 def copy_image(image_to_copy, full_output):
@@ -896,6 +897,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
         logging.error('Scan description not found in template file!')
         logging.error('Description: '+str(bxh_desc))
         logging.error('Template File: '+str(template_file))
+        #add_to_psd_file.add_info(template_file, bxh_file, bxh_desc)
         raise RuntimeError('Scan description not found in template file!')
     
     #Store the BIDS scan type (func, anat, dwi, fmap),
@@ -1274,6 +1276,6 @@ if __name__ == '__main__':
     ###TODO: handle input arguments
     #Check to make sure they're strings
     
-    multi_bxh2bids(sys.argv)
+    multi_bxhtobids(sys.argv)
     
     
