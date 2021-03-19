@@ -44,11 +44,13 @@ class psd_gui():
         self.bids_label_drop = tk.OptionMenu(self.frame_b, self.labelvar, *labelchoices)
 
         self.submit = tk.Button(master=self.frame_b,text='Set PSD Info',command=self.gui_submit_btn)
+        self.skip = tk.Button(master=self.frame_b,text='Skip this file for now',command=self.gui_skip_btn)
         self.bids_type_lbl.grid(row=0, column=0, sticky='w')
         self.bids_type_drop.grid(row=0, column=1, sticky='w')
         self.bids_label_lbl.grid(row=1, column=0, sticky='w')
         self.bids_label_drop.grid(row=1, column=1, sticky='w')
-        self.submit.grid(row=2, column=1)
+        self.submit.grid(row=2, column=0)
+        self.skip.grid(row=2, column=1)
 
         self.frame_a.pack(fill=tk.X, expand=True)
         self.frame_b.pack(fill=tk.X, expand=True)
@@ -64,6 +66,12 @@ class psd_gui():
         #Delete the GUI
         self.window.destroy()
 
+    def gui_skip_btn(self):
+        #Close the GUI without saving anything
+        self.bids_type = None
+        self.bids_label = None
+
+        self.window.destroy()
 
 
 def create_bxh_list(source_study_dir, dataid):
@@ -181,6 +189,10 @@ def main(argv):
             logging.info('bxh_desc: {}'.format(bxh_desc))
             logging.info('Opening GUI for input...')
             bids_type, bids_label = get_info_gui(bxh_file['bxhfile'], bxh_desc)
+
+            if (bids_type is None) or (bids_label is None):
+                logging.info('Skipping this file for now...')
+                continue
 
             logging.info('BIDS type received: {}'.format(bids_type))
             logging.info('BIDS label received: {}'.format(bids_label))
