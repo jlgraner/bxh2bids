@@ -35,7 +35,7 @@ Running `bxh2bids/check_bxh_descriptions.py` before trying to run bxh2bids will 
 `check_bxh_descriptions.py` can be called from the command line as: `check_bxh_descriptions.py -i <source_study_dir> -d <dataid>`. `<source_study_dir>` is the same as described above. `<dataid>` should be a scan ID in the form YYYYMMDD_ZZZZZ.
 Example call: `check_bxh_descriptions.py -i /mydir/studies/mystudy01/orig -d 19000102_12345`
 
-### 3) Common Errors
+### 4) Common Errors
 If you run bxh2bids on a scan ID before you've run check_bxh_descriptions.py you will see a "Scan description not found in template file!" error, followed by a line containing the scan description that could not be found and the path to your `psd_types.json` file.
 
 Running check_bxh_descriptions.py with the scan ID should fix the problem.
