@@ -140,12 +140,12 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "hi:d:", ['idir=', 'dataid='])
     except getopt.GetoptError:
-        print('check_psds.py -i <input_dir> -d <dataid>')
+        print('check_bxh_descriptions.py -i <input_dir> -d <dataid>')
         raise RuntimeError('Check passed args...')
 
     for opt, arg in opts:
         if opt == '-h':
-            print('check_psds.py -i <input_dir> -d <dataid>')
+            print('check_bxh_descriptions.py -i <input_dir> -d <dataid>')
             sys.exit()
         elif opt in ('-i', '--idir'):
             source_study_dir = str(arg)
