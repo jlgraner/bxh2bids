@@ -116,11 +116,19 @@
         "label": "b0"
     },
     "field map reverse polarity": {
-        "type": "notsupported",
+        "type": "fmap",
         "label": "b0"
     },
     "field map regular": {
-        "type": "notsupported",
+        "type": "fmap",
+        "label": "b0"
+    },
+    "field map": {
+        "type": "fmap",
+        "label": "b0"
+    },
+    "field map reverse": {
+        "type": "fmap",
         "label": "b0"
     }
 }

@@ -31,7 +31,8 @@
         },
 "fmaps": {
           "###":    {
-                    "acq": "[[acquisition name]]"
+                    "acq": "[[acquisition name]]",
+                    "dir": "[[phase-encode direction]]"
                     }
           },
 "dwis": {

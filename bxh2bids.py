@@ -45,6 +45,7 @@ import logging, time
 import bxh_pick_fields
 import string
 import gzip
+import nibabel as nb
 import tkinter as tk
 
 
@@ -350,6 +351,61 @@ def create_bold_json(bxh_file, full_output):
         out_file.write(out_string)
 
     logging.info('---FINISHED: create_bold_json---')
+
+
+def create_fmap_json(bxh_file, bxh_info_dict, full_output):
+
+    logging.info('---START: create_fmap_json---')
+
+    with open(bxh_file) as fd:
+        bxh_contents = xmltodict.parse(fd.read())
+
+    ##TODO: Clean this up! Probably move all these to a template file.
+
+    #Calculate total readout time
+
+    #Look for the TR
+    try:
+        tr = float(bxh_contents['bxh']['acquisitiondata']['tr'])
+    except:
+        logging.error('TR could not be found in passed .bxh!')
+        logging.error('bxh_file: '+str(bxh_file))
+        raise RuntimeError('TR could not be found in .bxh.')
+
+    #Put together dictionary of things to write to the sidecar .json file
+    #Make sure the fmap field template file is where it should be
+    here = os.path.dirname(os.path.realpath(__file__))
+    fmap_field_file = os.path.join(here, 'info_field_files', 'fmap_info_fields.json')
+    if not os.path.exists(fmap_field_file):
+        logging.error('Fmap image sidecar template file cannot be found!')
+        logging.error('It should be here: '+str(fmap_field_file))
+        raise RuntimeError('Missing functional sidecar template file!')
+
+    out_dict = bxh_pick_fields.bxh_pick(fmap_field_file, bxh_as_dict=bxh_contents)
+
+    #Make sure the tr is in seconds
+    tr = float(out_dict['RepetitionTime'])
+    if tr > 50:
+        logging.info('TR in bxh file is greater than 50, assuming it is in ms.')
+        tr = tr/1000
+        out_dict['RepetitionTime'] = tr
+
+    #Make sure echo time is in seconds
+    et = float(out_dict['EchoTime'])
+    if et > 1:
+        logging.info('Echo Time is greater than 1, assuming it is in ms.')
+        et = et/1000
+        out_dict['EchoTime'] = et
+
+    out_dict['PhaseEncodingDirection'] = bxh_info_dict['pe_code']
+
+    out_string = json.dumps(out_dict, indent=4)
+
+    logging.info('Writing sidecar func file: '+str(full_output))
+    with open(full_output, 'w') as out_file:
+        out_file.write(out_string)
+
+    logging.info('---FINISHED: create_fmap_json---')
 
 
 def create_anat_json(bxh_file, full_output):
@@ -700,6 +756,53 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #     logging.info('Creating bvec and bval files for DTI fmap...')
         #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
 
+        elif (bxh_desc == "field map") or (bxh_desc == "field map reverse"):
+            #############
+            #Convert the phase-encode direction to a data matrix dimension
+            #First get the participant-based PE direction ['AP','PA','IS','SI','LR','RL']
+            pe_dir = bxh_info_dict['dir']
+            #Determine how the data are stored in the data file (e.g. 'LPI')
+            img = nb.load(bxh_info_dict['orig_image'])
+            data_orientation = nb.orientations.aff2axcodes(img.affine)
+
+            #The second character of pe_dir should be the end of the PE direction.
+            #The first character of pe_dir should be the beginning of the PE direction.
+            pos_dims = ['i', 'j', 'k']
+            neg_dims = ['i-', 'j-', 'k-']
+            found_pe = 0
+            for count in range(3):
+                if data_orientation[count] == pe_dir[1]:
+                    pe_code = pos_dims[count]
+                    found_pe = 1
+                if data_orientation[count] == pe_dir[0]:
+                    pe_code = neg_dims[count]
+                    found_pe = 1
+            if not found_pe:
+                logging.error('Phase-encode direction code not determined!')
+                logging.error('Phase-encode direction supplied: {}'.format(pe_dir))
+                logging.error('Data storage directions: {}'.format(data_orientation))
+                raise RuntimeError
+            #Store the determined PE direction code in the bxh dictionary
+            bxh_info_dict['pe_code'] = pe_code
+
+            #Copy and rename the functional data
+            logging.info('Copying image file.')
+
+            #Copy the image data
+            image_to_copy = bxh_info_dict['orig_image']
+            output_name = bxh_info_dict['output_name']
+            full_output = os.path.join(output_dir, output_name)
+            logging.info('Copying file: '+str(image_to_copy))
+            logging.info('Target location: '+str(full_output))
+            copy_image(image_to_copy, full_output)
+
+            #Create output name for json file
+            output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+            full_output = os.path.join(output_dir, output_name)
+
+            create_fmap_json(bxh_file, bxh_info_dict, full_output)
+
+
         else:
             logging.error('B0 fieldmap description not recognized: '+str(bxh_desc))
             logging.error('These vary too much to make assumptions about how to deal with them.')
@@ -916,7 +1019,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     #an entry in the session info. file/dictionary.
     if this_entry_dict['scan_type'] == 'func':
         id_string = match_func(image_to_copy, ses_dict)
-        for bids_label in ['task', 'acq', 'rec', 'run', 'echo', 'tsv_file']:
+        for bids_label in ['task', 'acq', 'dir', 'rec', 'run', 'echo', 'tsv_file']:
             if bids_label in ses_dict['funcs'][id_string].keys():
                 this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
 
