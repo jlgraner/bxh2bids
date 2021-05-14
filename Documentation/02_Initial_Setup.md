@@ -32,7 +32,7 @@ In order for bxh2bids to properly sort the image file associated with each bxh f
 Running `bxh2bids/check_bxh_descriptions.py` before trying to run bxh2bids will check your scan descriptions against those in `psd_types.json` and allow you to enter information for those that are missing.
 
 #### 3.1) Usage
-`check_bxh_descriptions.py` can be called from the command line as: `check_bxh_descriptions.py -i <source_study_dir> -d <dataid>`. `<source_study_dir>` is the same as described above. `<dataid>` should be a scan ID in the form YYYYMMDD_ZZZZZ.
+`check_bxh_descriptions.py` can be called from the command line as: `check_bxh_descriptions.py -i <source_study_dir> -d <dataid>`. `<source_study_dir>` is the same as described in section 1) above. `<dataid>` should be a scan ID in the form YYYYMMDD_ZZZZZ.
 Example call: `check_bxh_descriptions.py -i /mydir/studies/mystudy01/orig -d 19000102_12345`
 
 ### 4) Common Errors
