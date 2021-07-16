@@ -756,7 +756,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #     logging.info('Creating bvec and bval files for DTI fmap...')
         #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
 
-        elif (bxh_desc == "field map") or (bxh_desc == "field map reverse"):
+        elif bxh_desc in ["field map","field map reverse","field map reverse polarity","field map regular"]:
             #############
             #Convert the phase-encode direction to a data matrix dimension
             #First get the participant-based PE direction ['AP','PA','IS','SI','LR','RL']
