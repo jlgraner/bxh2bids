@@ -126,12 +126,12 @@ def match_func(image_to_copy, ses_dict):
     func_scan_strings = ses_dict['funcs'].keys()
     #Try to match the file name with one of the func strings (e.g. '005_01')
     file_identified = 0
+    file_func_num = file_name.split('.nii')[0][-6:]
     for element in func_scan_strings:
-        if element in file_name:
+        if element == file_func_num:
             file_identified = file_identified + 1 #this should never be > 1
             if file_identified > 1:
                 logging.error('Func file matched with more than one id string!')
-                logging.error('Check your hopes and dreams file!')
                 logging.error('File name: '+str(image_to_copy))
                 raise RuntimeError('Functional file matched with > 1 id string!')
             taskid = ses_dict['funcs'][element]['task']
