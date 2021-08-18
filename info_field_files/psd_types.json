@@ -10,7 +10,15 @@
     "Ax FSPGR 3D BRAVO": {
         "type": "anat", 
         "label": "T1w"
-    }, 
+    },
+    "Ax FSPGR 3D": {
+        "type": "anat", 
+        "label": "T1w"
+    },
+    "SC:Ax FSPGR 3D": {
+        "type": "anat", 
+        "label": "T1w"
+    },
     "B0map_RF_Test": {
         "type": "notsupported", 
         "label": "b0"
@@ -87,6 +95,14 @@
         "type": "func", 
         "label": "bold"
     }, 
+    "GE EPI RT Task X 8": {
+        "type": "func", 
+        "label": "bold"
+    }, 
+    "GE EPI RT  Resting": {
+        "type": "func", 
+        "label": "bold"
+    }, 
     "Isotropic image": {
         "type": "notsupported", 
         "label": "dwi"
@@ -124,6 +140,14 @@
         "label": "b0"
     },
     "field map": {
+        "type": "fmap",
+        "label": "b0"
+    },
+    "fMRI fieldmap": {
+        "type": "fmap",
+        "label": "b0"
+    },
+    "fMRI fieldmap Reverse": {
         "type": "fmap",
         "label": "b0"
     },
