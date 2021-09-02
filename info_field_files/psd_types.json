@@ -133,26 +133,26 @@
     },
     "field map reverse polarity": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     },
     "field map regular": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     },
     "field map": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     },
     "fMRI fieldmap": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     },
     "fMRI fieldmap Reverse": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     },
     "field map reverse": {
         "type": "fmap",
-        "label": "b0"
+        "label": "epi"
     }
 }
