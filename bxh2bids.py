@@ -660,9 +660,25 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             logging.info('Target location: '+str(tsv_full_output))
             shutil.copy2(tsv_to_copy, tsv_full_output)
 
-        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-        full_output = os.path.join(output_dir, output_name)
-        create_bold_json(bxh_file, full_output)
+        json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_json_output = os.path.join(output_dir, json_output_name)
+        #Check to see if we have a BIAC-provided json file.
+        #If not, create one here.
+        if bxh_info_dict['biac_json'] is not None:
+            biac_json = bxh_info_dict['biac_json']
+            logging.info('BIAC-provided json found: {}'.format(biac_json))
+            #The only thing missing from the BIAC-provided json files is the task name.
+            #Find the task name and add it to the json file.
+            taskname = os.path.split(full_json_output)[-1].split('task-')[-1].split('_')[0]
+            with open(biac_json, 'r') as fd:
+                json_dict = json.loads(fd.read())
+            json_dict['Taskname'] = taskname
+            json_out = json.dumps(json_dict, indent=4)
+            logging.info('Writing json file: {}'.format(full_json_output))
+            with open(full_json_output, 'w') as fo:
+                fo.write(json_out)
+        else:
+            create_bold_json(bxh_file, full_json_output)
 
     elif bxh_info_dict['scan_type'] == 'fmap':
 
@@ -757,36 +773,9 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
 
         elif bxh_desc in ["field map","field map reverse","field map reverse polarity","field map regular","fMRI fieldmap","fMRI fieldmap Reverse"]:
-            #############
-            #Convert the phase-encode direction to a data matrix dimension
-            #First get the participant-based PE direction ['AP','PA','IS','SI','LR','RL']
-            pe_dir = bxh_info_dict['dir']
-            #Determine how the data are stored in the data file (e.g. 'LPI')
-            img = nb.load(bxh_info_dict['orig_image'])
-            data_orientation = nb.orientations.aff2axcodes(img.affine)
-
-            #The second character of pe_dir should be the end of the PE direction.
-            #The first character of pe_dir should be the beginning of the PE direction.
-            pos_dims = ['i', 'j', 'k']
-            neg_dims = ['i-', 'j-', 'k-']
-            found_pe = 0
-            for count in range(3):
-                if data_orientation[count] == pe_dir[1]:
-                    pe_code = pos_dims[count]
-                    found_pe = 1
-                if data_orientation[count] == pe_dir[0]:
-                    pe_code = neg_dims[count]
-                    found_pe = 1
-            if not found_pe:
-                logging.error('Phase-encode direction code not determined!')
-                logging.error('Phase-encode direction supplied: {}'.format(pe_dir))
-                logging.error('Data storage directions: {}'.format(data_orientation))
-                raise RuntimeError
-            #Store the determined PE direction code in the bxh dictionary
-            bxh_info_dict['pe_code'] = pe_code
-
-            #Copy and rename the functional data
-            logging.info('Copying image file.')
+            #Create output name for json file
+            json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+            full_json_output = os.path.join(output_dir, json_output_name)
 
             #Copy the image data
             image_to_copy = bxh_info_dict['orig_image']
@@ -796,12 +785,45 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             logging.info('Target location: '+str(full_output))
             copy_image(image_to_copy, full_output)
 
-            #Create output name for json file
-            output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-            full_output = os.path.join(output_dir, output_name)
+            #Check to see if we have a BIAC-provided json file.
+            #If not, create one here.
+            if bxh_info_dict['biac_json'] is not None:
+                biac_json = bxh_info_dict['biac_json']
+                logging.info('BIAC-provided json found: {}'.format(biac_json))
+                logging.info('Writing json file: {}'.format(full_json_output))
+                shutil.copy2(biac_json, full_json_output)
+            else:
+                #Convert the phase-encode direction to a data matrix dimension
+                #First get the participant-based PE direction ['AP','PA','IS','SI','LR','RL']
+                pe_dir = bxh_info_dict['dir']
+                #Determine how the data are stored in the data file (e.g. 'LPI')
+                img = nb.load(bxh_info_dict['orig_image'])
+                data_orientation = nb.orientations.aff2axcodes(img.affine)
 
-            create_fmap_json(bxh_file, bxh_info_dict, full_output)
+                #The second character of pe_dir should be the end of the PE direction.
+                #The first character of pe_dir should be the beginning of the PE direction.
+                pos_dims = ['i', 'j', 'k']
+                neg_dims = ['i-', 'j-', 'k-']
+                found_pe = 0
+                for count in range(3):
+                    if data_orientation[count] == pe_dir[1]:
+                        pe_code = pos_dims[count]
+                        found_pe = 1
+                    if data_orientation[count] == pe_dir[0]:
+                        pe_code = neg_dims[count]
+                        found_pe = 1
+                if not found_pe:
+                    logging.error('Phase-encode direction code not determined!')
+                    logging.error('Phase-encode direction supplied: {}'.format(pe_dir))
+                    logging.error('Data storage directions: {}'.format(data_orientation))
+                    raise RuntimeError
+                #Store the determined PE direction code in the bxh dictionary
+                bxh_info_dict['pe_code'] = pe_code
 
+                #Copy and rename the functional data
+                logging.info('Copying image file.')
+
+                create_fmap_json(bxh_file, bxh_info_dict, full_json_output)
 
         else:
             logging.error('B0 fieldmap description not recognized: '+str(bxh_desc))
@@ -812,6 +834,10 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
 
         #Put together the output directory
         output_dir = output_dir_func(target_study_dir, bxh_info_dict, "anat")
+
+        #Create the sidecare .json file based on the .bxh
+        json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_json_output = os.path.join(output_dir, json_output_name)
 
         #If the output directory does not exist, create it and
         #all upper directories.
@@ -835,15 +861,24 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         logging.info('Target location: '+str(full_output))
         copy_image(image_to_copy, full_output)
 
-        #Create the sidecare .json file based on the .bxh
-        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-        full_output = os.path.join(output_dir, output_name)
-        create_anat_json(bxh_file, full_output)
+        #Check to see if we have a BIAC-provided json file.
+        #If not, create one here.
+        if bxh_info_dict['biac_json'] is not None:
+            biac_json = bxh_info_dict['biac_json']
+            logging.info('BIAC-provided json found: {}'.format(biac_json))
+            logging.info('Writing json file: {}'.format(full_json_output))
+            shutil.copy2(biac_json, full_json_output)
+        else:
+            create_anat_json(bxh_file, full_json_output)
 
     elif bxh_info_dict['scan_type'] == 'dwi':
 
         #Put together the output directory
         output_dir = output_dir_func(target_study_dir, bxh_info_dict, "dwi")
+
+        #Create the sidecar .json file based on the .bxh
+        json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
+        full_json_output = os.path.join(output_dir, json_output_name)
 
         #If the output directory does not exist, create it and
         #all upper directories.
@@ -867,10 +902,15 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         logging.info('Target location: '+str(full_output))
         copy_image(image_to_copy, full_output)
 
-        #Create the sidecar .json file based on the .bxh
-        output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-        full_output = os.path.join(output_dir, output_name)
-        create_dwi_json(bxh_file, full_output)
+        #Check to see if we have a BIAC-provided json file.
+        #If not, create one here.
+        if bxh_info_dict['biac_json'] is not None:
+            biac_json = bxh_info_dict['biac_json']
+            logging.info('BIAC-provided json found: {}'.format(biac_json))
+            logging.info('Writing json file: {}'.format(full_json_output))
+            shutil.copy2(biac_json, full_json_output)
+        else:
+            create_dwi_json(bxh_file, full_json_output)
 
         #Create the bvecs and bvals files based on the .bxh
         logging.info('Running create_bvecs_bvals on this .bxh.')
@@ -986,6 +1026,14 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
             image_to_copy = str(image_to_copy)+'.gz'
 
     this_entry_dict['orig_image'] = image_to_copy
+
+    #Look for a json file provided by BIAC
+    json_name = bxh_dict['bxh']['datarec']['filename'].split('.nii')[0]+'.json'
+    biac_json = os.path.join(bxh_dir, json_name)
+    if os.path.exists(biac_json):
+        this_entry_dict['biac_json'] = biac_json
+    else:
+        this_entry_dict['biac_json'] = None
 
     #Get the description of the scan
     bxh_desc = bxh_dict['bxh']['acquisitiondata']['description']
@@ -1367,7 +1415,6 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
             logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
             bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
             convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
-            # convert_bxh(file_item['bxhfile'], ses_dict, target_study_dir=target_study_dir)
         
     #Create dataset_description.json if it does not already exist
     logging.info('Running create_dataset_description().')
