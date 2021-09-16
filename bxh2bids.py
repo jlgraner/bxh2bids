@@ -672,7 +672,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             taskname = os.path.split(full_json_output)[-1].split('task-')[-1].split('_')[0]
             with open(biac_json, 'r') as fd:
                 json_dict = json.loads(fd.read())
-            json_dict['Taskname'] = taskname
+            json_dict['TaskName'] = taskname
             json_out = json.dumps(json_dict, indent=4)
             logging.info('Writing json file: {}'.format(full_json_output))
             with open(full_json_output, 'w') as fo:
