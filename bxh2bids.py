@@ -398,6 +398,8 @@ def create_fmap_json(bxh_file, bxh_info_dict, full_output):
         out_dict['EchoTime'] = et
 
     out_dict['PhaseEncodingDirection'] = bxh_info_dict['pe_code']
+    if 'IntendedFor' in bxh_info_dict.keys():
+        out_dict['IntendedFor'] = bxh_info_dict['IntendedFor']
 
     out_string = json.dumps(out_dict, indent=4)
 
@@ -792,6 +794,16 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
                 logging.info('BIAC-provided json found: {}'.format(biac_json))
                 logging.info('Writing json file: {}'.format(full_json_output))
                 shutil.copy2(biac_json, full_json_output)
+
+                with open(biac_json, 'r') as fd:
+                    json_dict = json.loads(fd.read())
+                if 'IntendedFor' in bxh_info_dict.keys():
+                    json_dict['IntendedFor'] = bxh_info_dict['IntendedFor']
+                json_out = json.dumps(json_dict, indent=4)
+                logging.info('Writing json file: {}'.format(full_json_output))
+                with open(full_json_output, 'w') as fo:
+                    fo.write(json_out)
+
             else:
                 #Convert the phase-encode direction to a data matrix dimension
                 #First get the participant-based PE direction ['AP','PA','IS','SI','LR','RL']
@@ -970,9 +982,11 @@ def auto_create_internal_info(bxh_file, events_files_dir, data_info, multi_bxh_i
     this_entry_dict['sub'] = data_info['sub']
     this_entry_dict['ses'] = data_info['ses']
     this_entry_dict['bxh_desc'] = bxh_desc
+    if 'IntendedFor' in data_info.keys():
+        this_entry_dict['IntendedFor'] = data_info['IntendedFor']
 
     #Look for potential BIDS file name labels and add them to the entry dictionary if they are there
-    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo', 'IntendedFor']:
+    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'mod', 'echo']:
         for element in desc_parts[1:-1]:
             if element.split('-')[0] == bids_label:
                 this_entry_dict[bids_label] = element.split('-')[-1]
