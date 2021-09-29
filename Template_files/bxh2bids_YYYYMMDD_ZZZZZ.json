@@ -32,7 +32,8 @@
 "fmaps": {
           "###":    {
                     "acq": "[[acquisition name]]",
-                    "dir": "[[phase-encode direction]]"
+                    "dir": "[[phase-encode direction]]",
+                    "IntendedFor": "ses-[[SES]]/func/sub-[[SUB]]_ses-[[SES]]_task-[[TASK]]_run-[[RUN]]_bold.nii.gz"
                     }
           },
 "dwis": {
