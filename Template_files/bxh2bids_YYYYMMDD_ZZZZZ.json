@@ -20,7 +20,8 @@
           "###_##": {
                     "task": "[[YOUR TASK NAME]]",
                     "run": "##",
-                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv"
+                    "tsv_file": "[[FULL PATH AND FILE NAME OF THE .TSV FILE ASSOCIATED WITH THIS RUN]].tsv",
+                    "ignore": "yes"
                     }
           },
 "anats": {

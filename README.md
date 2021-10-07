@@ -5,6 +5,8 @@ This repository is designed to convert MRI data collected at the Brain Image and
 Additional documentation and usage notes are still in progress but can be found in the Documents folder.
 
 ## Update Notes:
+**10/07/2021**: Added support for "ignore" field in session information json files. If this field is given a value of "yes", the associated image file will not be processed.
+
 **09/29/2021**: Added support for fmap "IntendedFor" fields in session information json files. If present, the field's value will be written into the fmap's BIDS sidecar json file.
 
 **09/16/2021**: Added support for BIAC-provided sidecar json files. If this file is present for a given image, a renamed copy will be written to the appropriate BIDS directory. For task-based fMRI files, the "TaskName" field will be added to the output information before writing the renamed file.
