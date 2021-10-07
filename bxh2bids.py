@@ -1081,7 +1081,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     #an entry in the session info. file/dictionary.
     if this_entry_dict['scan_type'] == 'func':
         id_string = match_func(image_to_copy, ses_dict)
-        for bids_label in ['task', 'acq', 'dir', 'rec', 'run', 'echo', 'tsv_file']:
+        for bids_label in ['task', 'acq', 'dir', 'rec', 'run', 'echo', 'tsv_file', 'ignore']:
             if bids_label in ses_dict['funcs'][id_string].keys():
                 this_entry_dict[bids_label] = ses_dict['funcs'][id_string][bids_label]
 
@@ -1091,7 +1091,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     elif this_entry_dict['scan_type'] == 'anat':
         id_string = match_anat(image_to_copy, ses_dict)
         if id_string is not None:
-            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod']:
+            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod', 'ignore']:
                 if bids_label in ses_dict['anats'][id_string].keys():
                     this_entry_dict[bids_label] = ses_dict['anats'][id_string][bids_label]
         else:
@@ -1104,7 +1104,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     elif this_entry_dict['scan_type'] == 'fmap':
         id_string = match_fmap(image_to_copy, ses_dict)
         if id_string is not None:
-            for bids_label in ['acq', 'ce', 'rec', 'dir', 'run', 'mod', 'IntendedFor']:
+            for bids_label in ['acq', 'ce', 'rec', 'dir', 'run', 'mod', 'IntendedFor', 'ignore']:
                 if bids_label in ses_dict['fmaps'][id_string].keys():
                     this_entry_dict[bids_label] = ses_dict['fmaps'][id_string][bids_label]
                     ##NOTE: right now the IntendedFor info is NOT written to the final
@@ -1113,7 +1113,7 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
     elif this_entry_dict['scan_type'] == 'dwi':
         id_string = match_dwi(image_to_copy, ses_dict)
         if id_string is not None:
-            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod']:
+            for bids_label in ['acq', 'ce', 'rec', 'run', 'mod', 'ignore']:
                 if bids_label in ses_dict['dwis'][id_string].keys():
                     this_entry_dict[bids_label] = ses_dict['dwis'][id_string][bids_label]
     else:
@@ -1135,7 +1135,14 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
 
     #Add this bxh file's dictionary to the growing list.
     #Unless it's not supported.
-    if this_entry_dict['scan_type'] != 'notsupported':
+    skip = 0
+    if this_entry_dict['scan_type'] == 'notsupported':
+        skip = 1
+    if 'ignore' in this_entry_dict.keys():
+        if this_entry_dict['ignore'] == 'yes':
+            skip = 1
+
+    if skip == 0:
         multi_bxh_info_dict[bxh_name] = this_entry_dict
 
     return multi_bxh_info_dict
