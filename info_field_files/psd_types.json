@@ -54,7 +54,11 @@
     "3D Calibration": {
         "type": "notsupported", 
         "label": "LOC"
-    }, 
+    },
+    "3D calibration": {
+        "type": "notsupported", 
+        "label": "LOC"
+    },
     "SC:Ax FSPGR BRAVO": {
         "type": "anat", 
         "label": "T1w"
