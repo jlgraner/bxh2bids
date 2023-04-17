@@ -3,6 +3,14 @@
         "type": "dwi", 
         "label": "dwi"
     }, 
+    "Ax T2": {
+        "type": "anat", 
+        "label": "T2w"
+    }, 
+    "ORIG Ax T2": {
+        "type": "notsupported", 
+        "label": "T2w"
+    }, 
     "SPGR_GRAPPA Iron": {
         "type": "anat", 
         "label": "T1w"
@@ -130,7 +138,11 @@
     "sensespiral in": {
         "type": "func", 
         "label": "bold"
-    }, 
+    },
+    "fieldmap_revpol": {
+        "type": "fmap", 
+        "label": "b0"
+    },
     "ncanda-grefieldmap-v1": {
         "type": "fmap", 
         "label": "b0"
