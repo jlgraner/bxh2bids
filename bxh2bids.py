@@ -774,7 +774,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         #     logging.info('Creating bvec and bval files for DTI fmap...')
         #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
 
-        elif bxh_desc in ["field map","field map reverse","field map reverse polarity","field map regular","fMRI fieldmap","fMRI fieldmap Reverse"]:
+        elif bxh_desc in ["field map","field map reverse","field map reverse polarity","field map regular","fMRI fieldmap","fMRI fieldmap Reverse","fieldmap_revpol"]:
             #Create output name for json file
             json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
             full_json_output = os.path.join(output_dir, json_output_name)
