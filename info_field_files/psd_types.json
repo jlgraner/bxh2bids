@@ -141,7 +141,7 @@
     },
     "fieldmap_revpol": {
         "type": "fmap", 
-        "label": "b0"
+        "label": "epi"
     },
     "ncanda-grefieldmap-v1": {
         "type": "fmap", 
