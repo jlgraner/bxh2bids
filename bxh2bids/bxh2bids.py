@@ -42,7 +42,7 @@ import json
 import xmltodict
 import os, re, shutil, sys
 import logging, time
-import bxh_pick_fields
+import bxh2bids.utils.bxh_pick_fields
 import string
 import gzip
 import nibabel as nb
