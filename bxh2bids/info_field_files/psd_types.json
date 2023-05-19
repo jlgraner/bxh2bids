@@ -106,6 +106,10 @@
     "GE EPI RT choice": {
         "type": "func", 
         "label": "bold"
+    },
+    "NATURE_ses-intake_task-emoreg": {
+        "type": "func", 
+        "label": "bold"
     }, 
     "GE EPI RT Task X 8": {
         "type": "func", 
@@ -148,6 +152,10 @@
         "label": "b0"
     },
     "field map reverse polarity": {
+        "type": "fmap",
+        "label": "epi"
+    },
+    "field map_revpol": {
         "type": "fmap",
         "label": "epi"
     },
