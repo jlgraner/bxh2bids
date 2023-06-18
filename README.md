@@ -5,6 +5,8 @@ This repository is designed to convert MRI data collected at the Brain Image and
 Additional documentation and usage notes are still in progress but can be found in the Documents folder.
 
 ## Update Notes:
+**06/18/2023**: v2.0 -- Major refactor supporting installation via setup.py, command-line interface, and use of the $BIDS_DIR environment variable. After installation, type "bxh2bids" in the terminal for additional usage notes.
+
 **10/07/2021**: Added support for "ignore" field in session information json files. If this field is given a value of "yes", the associated image file will not be processed.
 
 **09/29/2021**: Added support for fmap "IntendedFor" fields in session information json files. If present, the field's value will be written into the fmap's BIDS sidecar json file.
