@@ -111,6 +111,10 @@
         "type": "func", 
         "label": "bold"
     }, 
+    "NATURE_ses-folup_task-emoreg": {
+        "type": "func", 
+        "label": "bold"
+    }, 
     "GE EPI RT Task X 8": {
         "type": "func", 
         "label": "bold"
