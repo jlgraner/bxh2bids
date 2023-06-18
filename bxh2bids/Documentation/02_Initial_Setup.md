@@ -2,6 +2,14 @@
 
 This assumes you have already downloaded the bxh2bids repository and unzipped it in a directory of your choosing. (Look [here](https://github.com/jlgraner/bxh2bids/blob/Documentation_1/Documentation/01_General_Flow.md) for how to do so.)
 
+## OPTION 1: Local Installation (v2.0 and beyond)
+### 1) Install bxh2bids
+In a terminal, navigate to the directory containing the unzipped bxh2bids `setup.py` file. Install via `python setup.py` (or `python setup.py develop` if desired). Test installation by typing `bxh2bids` in the terminal; this should display help and usage messages.
+
+### 2) Set BIDS_DIR
+bxh2bids can now use a $BIDS_DIR environment variable as the default BIDS-format directory. To allow it to do so, set this variable to the path to your top-level BIDS directory (e.g. the directory containing `rawdata`, `sourcedata`, etc.).
+
+## OPTION 2: Running Without Local Installation (supported by all versions)
 ### 1) run_bxh2bids_EXAMPLE.py
 Create a new copy of .../bxh2bids/Template_files/run_bxh2bids_EXAMPLE.py (via `cp` on linux or Copy/Past on Windows or Mac) somewhere outside the git repository. I would recommend putting it in a location that is directly associated with the study you want to use bxh2bids with. Rename the copy, replacing "EXAMPLE" with your study name.
 
