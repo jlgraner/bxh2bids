@@ -10,9 +10,8 @@ behavioral data are collected and saved, the conversion process of BIAC data to 
 be fully automated in a single general package. However, this documentation will attempt to guide the user
 in the creation of files when necessary.
 
-# General Flow
+# Getting the Code
 
-Current general flow of initial setup and usage:
 #### 1. Download the repository from GitHub and save it onto the system from which you'll be running it.
    - If you have git installed, you can use `git clone https://github.com/jlgraner/bxh2bids`  
        OR
@@ -20,9 +19,6 @@ Current general flow of initial setup and usage:
 #### 2. Make sure you have some required python libraries installed
    - The library you are most likely to not have installed already is xmltodict. This should be easily installable
      via pip (`pip install xmltodict`). However, if this doesn't work the package can be downloaded [here](https://pypi.python.org/pypi/xmltodict).
-#### 3. Edit/create a couple files so bxh2bids can find your data and match functional .bxh files to specific tasks.
-#### 4. Edit a copy of run_bxh2bids_EXAMPLE.py and call it via python in a commmand line.
 
-Once things are set up, running new data sessions just requires a subset of step 3 and then step 4.
-
-See other documentation files for more detailed information.
+# Run Via Local Install or In-Place
+As of v2.0, bxh2bids can be installed via setup.py and called directly from the command line. However, all versions of bxh2bids can be run without local installation by editing the run_bxh2bids_EXAMPLE.py script (see [02_Initial_Setup](bxh2bids/Documentation/02_Initial_Setup.md) for details)
