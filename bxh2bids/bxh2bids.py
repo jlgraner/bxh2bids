@@ -1213,7 +1213,11 @@ def compare_output_names(multi_bxh_info_dict):
             logging.info('Extracting acquisition numbers from bxh file names...')
             num_list = []
             for matching_bxh in matching_list:
-                bxh_number = os.path.splitext(bxh)[0][-3:]
+                #Check to see if the acquisition ends in "_0?"
+                if os.path.splitext(bxh)[0][-3] == '_':
+                    bxh_number = os.path.splitext(bxh)[0][-6:-3]
+                else:
+                    bxh_number = os.path.splitext(bxh)[0][-3:]
                 num_list.append(int(bxh_number))
             #Order the matching list by acquisition number
             ordered_bxh_list = [x for _,x in sorted(zip(num_list,matching_list), key=lambda pair: pair[0])]
