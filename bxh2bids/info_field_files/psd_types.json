@@ -59,6 +59,22 @@
         "type": "notsupported", 
         "label": "LOC"
     }, 
+    "3 plane loc ssfse oblique to orbits": {
+        "type": "notsupported", 
+        "label": "LOC"
+    }, 
+    "MultiPlanar Reconstruction (MPR) Ob_Cor_A -&gt; P_Average_sp:1.0_th": {
+        "type": "notsupported", 
+        "label": "T1w"
+    }, 
+    "MultiPlanar Reconstruction (MPR) Ob_Sag_R -> L_Average_sp:1.0_th": {
+        "type": "notsupported", 
+        "label": "T1w"
+    }, 
+    "MultiPlanar Reconstruction (MPR) Ob_Cor_A -> P_Average_sp:1.0_th": {
+        "type": "notsupported", 
+        "label": "T1w"
+    }, 
     "3D Calibration": {
         "type": "notsupported", 
         "label": "LOC"
@@ -182,5 +198,13 @@
     "field map reverse": {
         "type": "fmap",
         "label": "epi"
+    },
+    "NATURE_ses-intake_task-rest": {
+        "type": "func",
+        "label": "bold"
+    },
+    "NATURE_ses-folup_task-rest": {
+        "type": "func",
+        "label": "bold"
     }
 }
