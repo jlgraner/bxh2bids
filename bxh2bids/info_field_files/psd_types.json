@@ -163,6 +163,10 @@
         "type": "func", 
         "label": "bold"
     },
+    "Hyperband DTI": {
+        "type": "dwi", 
+        "label": "dwi"
+    }, 
     "fieldmap_revpol": {
         "type": "fmap", 
         "label": "epi"
