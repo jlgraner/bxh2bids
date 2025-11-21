@@ -7,7 +7,7 @@ setup(
     author="John Graner",
     author_email="john.graner@duke.edu",
     url="http://github.com/jlgraner/bxh2bids",
-    install_requires=['xmltodict'],
+    install_requires=['xmltodict', 'spec2nii'],
     packages=find_packages(),
     entry_points={
         "console_scripts": [

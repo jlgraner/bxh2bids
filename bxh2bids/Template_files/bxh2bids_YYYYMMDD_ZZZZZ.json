@@ -41,5 +41,12 @@
           "###":    {
                     "acq": "[[acqusition name]]"
                     }
-          }
+          },
+"mrs":  {
+          "PBIA600000_19000101_555555_55555.7": {
+                                                "acq": "[[acquisition name]]",
+                                                "run": "##",
+                                                "voi": "[[volume of interest]]"
+                                                }
+        }
 }
