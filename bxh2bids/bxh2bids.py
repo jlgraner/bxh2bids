@@ -610,15 +610,15 @@ output_dir_func = lambda target_study_dir, bxh_info_dict, scan_type: \
 def rename_pfile(mrs_path):
     """Add .7 to the end of a passed pfile"""
 
-    #Check for input file
-    if not os.path.exists(mrs_path):
-        raise FileNotFoundError(f"Missing input pfile: {mrs_path}")
-    
     new_file = mrs_path + ".7"
     #Check to make sure new file isn't there already
     if os.path.exists(new_file):
         logging.warning(f"Renamed file already there: {new_file}")
         return new_file
+
+    #Check for input file
+    if not os.path.exists(mrs_path):
+        raise FileNotFoundError(f"Missing input pfile: {mrs_path}")
     
     #Rename the file
     logging.info(
