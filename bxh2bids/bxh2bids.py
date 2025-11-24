@@ -634,7 +634,7 @@ def rename_pfile(mrs_path):
     
     return new_file
 
-def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, target_study_dir=None):
+def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, skip_flag, target_study_dir=None):
     """
     Convert specified MRS p-file to BIDS using spec2nii.
     """
@@ -667,6 +667,15 @@ def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, target_study_dir=Non
     #Put together BIDS output directory
     out_dir = output_dir_func(target_study_dir, info_dict, 'mrs')
     out_file = os.path.join(out_dir, output_file)
+
+    #Check for existing output
+    if os.path.exists(output_file):
+        logging.info(f'Output file already exists: {output_file}')
+        if skip_flag:
+            logging.info('Skip flag set; skipping this file!')
+            return
+        else:
+            raise RuntimeError('Skip flag not set; exitting!')
 
     #Call spec2nii
     spec_cmd = f"spec2nii ge -j -f {output_prefix} -o {out_dir} {mrs_path}"
@@ -1519,7 +1528,7 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
             this_file = file_item['bxhfile']
             logging.info(f'Running convert_bxh on: {this_file}')
             bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
-            convert_bxh(file_item['bxhfile'], bxh_info_dict, skip_flag target_study_dir=target_study_dir)
+            convert_bxh(file_item['bxhfile'], bxh_info_dict, skip_flag, target_study_dir=target_study_dir)
         
     #Process MRS files if present in the session info. file
     if "mrs" in ses_dict.keys():
@@ -1528,7 +1537,7 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
             mrs_file_info = ses_dict["mrs"][mrs_file]
             #Convert MRS file to BIDS
             logging.info(f'Running convert_mrs on: {mrs_file}')
-            convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, target_study_dir=target_study_dir)
+            convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, skip_flag, target_study_dir=target_study_dir)
 
     #Create dataset_description.json if it does not already exist
     logging.info('Running create_dataset_description().')
