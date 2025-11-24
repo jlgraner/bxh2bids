@@ -1214,7 +1214,7 @@ def create_output_name(bxh_info_dict):
             output_suffix = output_suffix+'_'+str(bids_label)+'-'+str(bxh_info_dict[bids_label])
     output_suffix = output_suffix+'_'+str(bxh_info_dict['scan_label'])
 
-    if bxh_info_dict['orig_image'][-3:] == '.gz':
+    if (bxh_info_dict['orig_image'][-3:] == '.gz') or (bxh_info_dict['orig_image'][-2:] == '.7'):
         output_ext = '.nii.gz'
     else:
         output_ext = '.nii'
