@@ -686,7 +686,7 @@ def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, target_study_dir=Non
         logging.info(f"Wrote MRS output file: {out_file}")
 
 
-def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
+def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
     #Read in the bxh_file using xmltodict
     #Pull out:
     #   image file name (doc['bxh']['datarec']['filename']
@@ -735,7 +735,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             tsv_full_output = os.path.join(output_dir, tsv_output_name)
             #Check to see if the output exists already
             if os.path.exists(tsv_full_output):
-                raise RuntimeError('Output file already exists: '+str(tsv_full_output))
+                logging.info(f'Output file already exists: {tsv_full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['tsv_file']))
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
             tsv_to_copy = bxh_info_dict['tsv_file']
             logging.info('Copying file: '+str(tsv_to_copy))
             logging.info('Target location: '+str(tsv_full_output))
@@ -811,7 +816,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             full_output = bxh_info_dict['output_prefix']+b_label+file_type
             #Check to see if the output file already exists
             if os.path.exists(full_output):
-                raise RuntimeError('Output file already exists: '+str(full_output))
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
 
             #Copy the image data
             logging.info('Copying file: '+str(image_to_copy))
@@ -915,7 +925,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-            raise RuntimeError('Output file already exists: '+str(full_output))
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -956,7 +971,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-            raise RuntimeError('Output file already exists: '+str(full_output))
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -1423,7 +1443,7 @@ def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, e
     logging.info('-----FINISH: multi_bxhtobids-----')
 
 
-def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
+def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir, skip_flag):
     """
     Locates bxh files and attempts to convert imaging data associated with 
     each one found.
@@ -1499,7 +1519,7 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
             this_file = file_item['bxhfile']
             logging.info(f'Running convert_bxh on: {this_file}')
             bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
-            convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
+            convert_bxh(file_item['bxhfile'], bxh_info_dict, skip_flag target_study_dir=target_study_dir)
         
     #Process MRS files if present in the session info. file
     if "mrs" in ses_dict.keys():

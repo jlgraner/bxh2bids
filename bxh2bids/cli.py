@@ -72,6 +72,17 @@ def _get_args():
         ),
     )
 
+    parser.add_argument(
+        "-k",
+        "--skip-existing",
+        action="store_true",
+        help=textwrap.dedent(
+            """\
+            Skip conversion for files with existing BIDS versions
+            """
+        ),
+    )
+
     required_args = parser.add_argument_group("Required Arguments")
     required_args.add_argument(
         "-b",
@@ -102,6 +113,7 @@ def main():
     args = _get_args().parse_args()
     biac_dirs = args.biac_dirs
     proj_dir = args.proj_dir
+    skip_flag = args.skip_existing
 
     # Check proj_dir. If not passed, check for env variable.
     if proj_dir == 'None':
@@ -115,7 +127,7 @@ def main():
         raise FileNotFoundError(f"Expected to find project directory : {proj_dir}")
 
     import bxh2bids.run_bxh2bids as rb2b
-    rb2b.bidsify(proj_dir, biac_dirs)
+    rb2b.bidsify(proj_dir, biac_dirs, skip_flag)
 
 
 
