@@ -1496,7 +1496,8 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     for file_item in bxh_list:
         bxh_file_name = os.path.split(file_item['bxhfile'])[-1]
         if bxh_file_name in multi_bxh_info_dict.keys():
-            logging.info(f'Running convert_bxh on: {file_item['bxhfile']}')
+            this_file = file_item['bxhfile']
+            logging.info(f'Running convert_bxh on: {this_file}')
             bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
             convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
         
