@@ -731,7 +731,7 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
         if os.path.exists(full_output):
             logging.info(f'Output file already exists: {full_output}')
             if skip_flag:
-                logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['image_to_copy']))
+                logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['orig_image']))
                 return
             else:
                 raise RuntimeError('Skip flag not set; exitting!')
