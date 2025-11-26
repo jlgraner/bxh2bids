@@ -727,6 +727,15 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
         image_to_copy = bxh_info_dict['orig_image']
         output_name = bxh_info_dict['output_name']
         full_output = os.path.join(output_dir, output_name)
+        #Check to see if the output exists already
+        if os.path.exists(full_output):
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['image_to_copy']))
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
+
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
         copy_image(image_to_copy, full_output)
@@ -851,6 +860,15 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
             image_to_copy = bxh_info_dict['orig_image']
             output_name = bxh_info_dict['output_name']
             full_output = os.path.join(output_dir, output_name)
+            #Check to see if the output file already exists
+            if os.path.exists(full_output):
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
+
             logging.info('Copying file: '+str(image_to_copy))
             logging.info('Target location: '+str(full_output))
             copy_image(image_to_copy, full_output)
@@ -934,12 +952,12 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-                logging.info(f'Output file already exists: {full_output}')
-                if skip_flag:
-                    logging.info('Skip flag set; skipping this file!')
-                    return
-                else:
-                    raise RuntimeError('Skip flag not set; exitting!')
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file!')
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -980,12 +998,12 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-                logging.info(f'Output file already exists: {full_output}')
-                if skip_flag:
-                    logging.info('Skip flag set; skipping this file!')
-                    return
-                else:
-                    raise RuntimeError('Skip flag not set; exitting!')
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file!')
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -1009,7 +1027,7 @@ def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
     elif bxh_info_dict['scan_type'] == 'notsupported':
         logging.info('Scan type not supported for: '+str(bxh_file))
     else:
-        logging.error('Scan type not recognized; should be [bold,anat,dwi]: '+str(scan_type))
+        logging.error('Scan type not recognized; should be [bold,anat,dwi]: '+str(bxh_info_dict['scan_type']))
         raise RuntimeError('Scan type not recognized!')
         
     logging.info('----FINISH: convert_bxh----')
