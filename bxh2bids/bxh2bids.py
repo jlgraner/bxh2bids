@@ -669,8 +669,8 @@ def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, skip_flag, target_st
     out_file = os.path.join(out_dir, output_file)
 
     #Check for existing output
-    if os.path.exists(output_file):
-        logging.info(f'Output file already exists: {output_file}')
+    if os.path.exists(out_file):
+        logging.info(f'Output file already exists: {out_file}')
         if skip_flag:
             logging.info('Skip flag set; skipping this file!')
             return
