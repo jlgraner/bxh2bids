@@ -4,7 +4,7 @@ import os, sys
 import json
 import bxh2bids.bxh2bids as b2b
 
-def bidsify(proj_dir, biac_dirs):
+def bidsify(proj_dir, biac_dirs, skip_flag):
 
     #Set information about your study sessions
     source_study_dir=os.path.join(proj_dir, 'sourcedata')
@@ -26,7 +26,7 @@ def bidsify(proj_dir, biac_dirs):
             ses_dict = json.loads(fd.read())
 
         try:
-            b2b.multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir)
+            b2b.multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir, skip_flag)
             good_data.append(dataid)
         except Exception as ex:
             print('Data set failed to run: '+str(dataid))

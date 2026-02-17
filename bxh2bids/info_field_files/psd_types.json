@@ -210,5 +210,9 @@
     "NATURE_ses-folup_task-rest": {
         "type": "func",
         "label": "bold"
+    },
+    "task-test": {
+        "type": "notsupported",
+        "label": "bold"
     }
 }

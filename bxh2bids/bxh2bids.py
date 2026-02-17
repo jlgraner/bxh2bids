@@ -41,12 +41,12 @@
 import json
 import xmltodict
 import os, re, shutil, sys
+import subprocess
 import logging, time
 import bxh2bids.utils.bxh_pick_fields
 import string
 import gzip
 import nibabel as nb
-import tkinter as tk
 
 
 def copy_image(image_to_copy, full_output):
@@ -607,7 +607,95 @@ output_dir_func = lambda target_study_dir, bxh_info_dict, scan_type: \
     else os.path.join(target_study_dir, 'sub-'+bxh_info_dict['sub'], scan_type) 
 
 
-def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
+def rename_pfile(mrs_path):
+    """Add .7 to the end of a passed pfile"""
+
+    new_file = mrs_path + ".7"
+    #Check to make sure new file isn't there already
+    if os.path.exists(new_file):
+        logging.warning(f"Renamed file already there: {new_file}")
+        return new_file
+
+    #Check for input file
+    if not os.path.exists(mrs_path):
+        raise FileNotFoundError(f"Missing input pfile: {mrs_path}")
+    
+    #Rename the file
+    logging.info(
+        "Renaming:"
+        + f"\nOld name: {mrs_path}"
+        + f"\nNew name: {new_file}"
+        )
+    os.rename(mrs_path, new_file)
+
+    #Check for output
+    if not os.path.exists(new_file):
+        raise FileNotFoundError(f"Renamed file not found: {new_file}")
+    
+    return new_file
+
+def convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, skip_flag, target_study_dir=None):
+    """
+    Convert specified MRS p-file to BIDS using spec2nii.
+    """
+
+    #Make sure spec2nii is available
+    ##TODO: test spec2nii
+
+    logging.info('----START: convert_mrs----')
+
+    #If passed p-file name doesn't end with ".7", add it
+    mrs_path = os.path.join(mrs_dir, mrs_file)
+    if mrs_file[-2:] != ".7":
+        mrs_path = rename_pfile(mrs_path)
+
+    #Make sure p-file is there
+    if not os.path.exists(mrs_path):
+        raise RuntimeError(f"Passed Pfile not found: {mrs_path}")
+    
+    #Put together BIDS-format output name
+    #First create dictionary for create_output_name()
+    info_dict = mrs_file_info
+    info_dict["sub"]=ses_dict["sub"]
+    info_dict["ses"]=ses_dict["ses"]
+    info_dict["orig_image"]=mrs_path
+    info_dict["scan_label"]="svs"
+    name_returns = create_output_name(info_dict)
+    output_prefix = name_returns[1]+"_svs" #use in call to spec2nii
+    output_file = name_returns[0] #use to check output
+
+    #Put together BIDS output directory
+    out_dir = output_dir_func(target_study_dir, info_dict, 'mrs')
+    out_file = os.path.join(out_dir, output_file)
+
+    #Check for existing output
+    if os.path.exists(out_file):
+        logging.info(f'Output file already exists: {out_file}')
+        if skip_flag:
+            logging.info('Skip flag set; skipping this file!')
+            return
+        else:
+            raise RuntimeError('Skip flag not set; exitting!')
+
+    #Call spec2nii
+    spec_cmd = f"spec2nii ge -j -f {output_prefix} -o {out_dir} {mrs_path}"
+    logging.info(f"Calling: {spec_cmd}")
+    job_spec = subprocess.Popen(spec_cmd, shell=True, stdout=subprocess.PIPE)
+    job_out, job_err = job_spec.communicate()
+    job_spec.wait()
+
+    #Check for output
+    if not os.path.exists(out_file):
+        raise FileNotFoundError(
+            f"Output from spec2nii not found: {output_file}"
+            + f"\nStandard out: {job_out}"
+            + f"\nStandard error: {job_err}"
+            )
+    else:
+        logging.info(f"Wrote MRS output file: {out_file}")
+
+
+def convert_bxh(bxh_file, bxh_info_dict, skip_flag, target_study_dir=None):
     #Read in the bxh_file using xmltodict
     #Pull out:
     #   image file name (doc['bxh']['datarec']['filename']
@@ -639,6 +727,15 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         image_to_copy = bxh_info_dict['orig_image']
         output_name = bxh_info_dict['output_name']
         full_output = os.path.join(output_dir, output_name)
+        #Check to see if the output exists already
+        if os.path.exists(full_output):
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['orig_image']))
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
+
         logging.info('Copying file: '+str(image_to_copy))
         logging.info('Target location: '+str(full_output))
         copy_image(image_to_copy, full_output)
@@ -656,7 +753,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             tsv_full_output = os.path.join(output_dir, tsv_output_name)
             #Check to see if the output exists already
             if os.path.exists(tsv_full_output):
-                raise RuntimeError('Output file already exists: '+str(tsv_full_output))
+                logging.info(f'Output file already exists: {tsv_full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file: ' + str(bxh_info_dict['tsv_file']))
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
             tsv_to_copy = bxh_info_dict['tsv_file']
             logging.info('Copying file: '+str(tsv_to_copy))
             logging.info('Target location: '+str(tsv_full_output))
@@ -732,7 +834,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             full_output = bxh_info_dict['output_prefix']+b_label+file_type
             #Check to see if the output file already exists
             if os.path.exists(full_output):
-                raise RuntimeError('Output file already exists: '+str(full_output))
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
 
             #Copy the image data
             logging.info('Copying file: '+str(image_to_copy))
@@ -744,36 +851,6 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             full_output = os.path.join(output_dir, output_name)
             create_ncanda_json(bxh_file, full_output)
 
-        # elif bxh_desc == 'HCP DTI reverse polarity':
-        #     #Data in the same 3D shape as a DTI acquisition, but with only a few volumes
-        #     #and with a reversed phase-encode direction.
-        #     #The first volume should be a b-value=0 image that can be used for distortion
-        #     #correction.
-
-        #     logging.info('Processing reverse polarity DTI data...')
-
-        #     #Copy the fmap file
-        #     image_to_copy = bxh_info_dict['orig_image']
-        #     output_name = bxh_info_dict['output_name']
-        #     full_output = os.path.join(output_dir, output_name)
-        #     #Check to see if the output file already exists
-        #     if os.path.exists(full_output):
-        #         raise RuntimeError('Output file already exists: '+str(full_output))
-
-        #     #Copy the image data
-        #     logging.info('Copying file: '+str(image_to_copy))
-        #     logging.info('Target location: '+str(full_output))
-        #     copy_image(image_to_copy, full_output)
-
-        #     #Put together the sidecar .json file
-        #     output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
-        #     full_output = os.path.join(output_dir, output_name)
-        #     create_dwi_json(bxh_file, full_output)
-
-        #     #Create bvec and bval files
-        #     logging.info('Creating bvec and bval files for DTI fmap...')
-        #     create_bvecs_bvals(bxh_file, bxh_info_dict, output_dir)
-
         elif bxh_desc in ["field map","field map reverse","field map reverse polarity","field map regular","fMRI fieldmap","fMRI fieldmap Reverse","fieldmap_revpol","field map_revpol"]:
             #Create output name for json file
             json_output_name = bxh_info_dict['output_prefix']+'_'+bxh_info_dict['scan_label']+'.json'
@@ -783,6 +860,15 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
             image_to_copy = bxh_info_dict['orig_image']
             output_name = bxh_info_dict['output_name']
             full_output = os.path.join(output_dir, output_name)
+            #Check to see if the output file already exists
+            if os.path.exists(full_output):
+                logging.info(f'Output file already exists: {full_output}')
+                if skip_flag:
+                    logging.info('Skip flag set; skipping this file!')
+                    return
+                else:
+                    raise RuntimeError('Skip flag not set; exitting!')
+
             logging.info('Copying file: '+str(image_to_copy))
             logging.info('Target location: '+str(full_output))
             copy_image(image_to_copy, full_output)
@@ -866,7 +952,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-            raise RuntimeError('Output file already exists: '+str(full_output))
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file!')
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -907,7 +998,12 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
         full_output = os.path.join(output_dir, output_name)
         #Check to see if the output file already exists
         if os.path.exists(full_output):
-            raise RuntimeError('Output file already exists: '+str(full_output))
+            logging.info(f'Output file already exists: {full_output}')
+            if skip_flag:
+                logging.info('Skip flag set; skipping this file!')
+                return
+            else:
+                raise RuntimeError('Skip flag not set; exitting!')
         
         #Copy the image data
         logging.info('Copying file: '+str(image_to_copy))
@@ -931,7 +1027,7 @@ def convert_bxh(bxh_file, bxh_info_dict, target_study_dir=None):
     elif bxh_info_dict['scan_type'] == 'notsupported':
         logging.info('Scan type not supported for: '+str(bxh_file))
     else:
-        logging.error('Scan type not recognized; should be [bold,anat,dwi]: '+str(scan_type))
+        logging.error('Scan type not recognized; should be [bold,anat,dwi]: '+str(bxh_info_dict['scan_type']))
         raise RuntimeError('Scan type not recognized!')
         
     logging.info('----FINISH: convert_bxh----')
@@ -1146,24 +1242,26 @@ def create_internal_info(bxh_file, ses_dict, multi_bxh_info_dict):
         multi_bxh_info_dict[bxh_name] = this_entry_dict
 
     return multi_bxh_info_dict
-#####################
+
 
 def create_output_name(bxh_info_dict):
-
-    #This function takes as input a dictionary from the
-    #multi_bxh_info_dict collection.
+    """
+    Put together a BIDS-format file name based on tags and labels stored in
+    the passed dictionary. The input dictionary is typically an entry from
+    the multi_bxh_info_dict collection.
+    """
 
     logging.info('Creating output name...')
 
     output_prefix = 'sub-'+str(bxh_info_dict['sub'])+'_ses-'+str(bxh_info_dict['ses']) if bxh_info_dict['ses'] != "" else 'sub-'+str(bxh_info_dict['sub']) 
 
     output_suffix = ''
-    for bids_label in ['task', 'acq', 'ce', 'rec', 'dir', 'run', 'echo', 'mod']:
+    for bids_label in ['task', 'acq', 'voi', 'ce', 'rec', 'dir', 'run', 'echo', 'mod']:
         if bids_label in bxh_info_dict.keys():
             output_suffix = output_suffix+'_'+str(bids_label)+'-'+str(bxh_info_dict[bids_label])
     output_suffix = output_suffix+'_'+str(bxh_info_dict['scan_label'])
 
-    if bxh_info_dict['orig_image'][-3:] == '.gz':
+    if (bxh_info_dict['orig_image'][-3:] == '.gz') or (bxh_info_dict['orig_image'][-2:] == '.7'):
         output_ext = '.nii.gz'
     else:
         output_ext = '.nii'
@@ -1180,10 +1278,12 @@ def create_output_name(bxh_info_dict):
 
 
 def compare_output_names(multi_bxh_info_dict):
+    """
+    Compare output file names. If two bxh file entries have the same
+    output file name, try to fix this by including run numbers
+    in the name creation.
+    """
 
-    #Compare output file names. If two bxh file entries have the same
-    #output file name, try to fix this by including run numbers
-    #in the name creation.
     logging.info('Making sure each output name is unique...')
     for bxh in multi_bxh_info_dict:
         #Entries for other files
@@ -1276,7 +1376,9 @@ def __set_logging(dataid, log_dir):
 
 
 def __find_bxh_files(input_dir):
-
+    """
+    Find all .bxh files in input_dir. Return a list of them.
+    """
     bxh_list = []
     if os.path.exists(input_dir):
         logging.info('Looking for .bxh files in: '+str(input_dir))
@@ -1368,8 +1470,11 @@ def multi_autobxhtobids(dataid, data_info, source_study_dir, target_study_dir, e
     logging.info('-----FINISH: multi_bxhtobids-----')
 
 
-def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir):
-    
+def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_dir, skip_flag):
+    """
+    Locates bxh files and attempts to convert imaging data associated with 
+    each one found.
+    """
 
     __set_logging(dataid, log_dir)
 
@@ -1404,6 +1509,7 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     #Look for the data directories in the Anat and Func directories
     anat_dir = os.path.join(source_study_dir, 'Data', 'Anat', dataid)
     func_dir = os.path.join(source_study_dir, 'Data', 'Func', dataid)
+    mrs_dir = os.path.join(source_study_dir, 'Data', 'Pfiles', dataid)
     if not os.path.exists(anat_dir):
         logging.info('No anatomy data directory found for id: '+str(dataid))
         anat_bxh_list = []
@@ -1437,10 +1543,20 @@ def multi_bxhtobids(dataid, ses_dict, source_study_dir, target_study_dir, log_di
     for file_item in bxh_list:
         bxh_file_name = os.path.split(file_item['bxhfile'])[-1]
         if bxh_file_name in multi_bxh_info_dict.keys():
-            logging.info('Running convert_bxh on: '+str(file_item['bxhfile']))
+            this_file = file_item['bxhfile']
+            logging.info(f'Running convert_bxh on: {this_file}')
             bxh_info_dict = multi_bxh_info_dict[bxh_file_name]
-            convert_bxh(file_item['bxhfile'], bxh_info_dict, target_study_dir=target_study_dir)
+            convert_bxh(file_item['bxhfile'], bxh_info_dict, skip_flag, target_study_dir=target_study_dir)
         
+    #Process MRS files if present in the session info. file
+    if "mrs" in ses_dict.keys():
+        for mrs_file in ses_dict["mrs"]:
+            #Pull out the dictionary of BIDS tags and labels
+            mrs_file_info = ses_dict["mrs"][mrs_file]
+            #Convert MRS file to BIDS
+            logging.info(f'Running convert_mrs on: {mrs_file}')
+            convert_mrs(mrs_file, mrs_file_info, mrs_dir, ses_dict, skip_flag, target_study_dir=target_study_dir)
+
     #Create dataset_description.json if it does not already exist
     logging.info('Running create_dataset_description().')
     create_dataset_description(target_study_dir)
